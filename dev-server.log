@@ -1,10 +1,249 @@
 $ next dev -p 3000 2>&1 | tee dev.log
- ⨯ Failed to start server
-Error: Failed to start server. Is port 3000 in use?
-    at serve (null)
-    at Promise (null) {
-  code: 'EADDRINUSE',
-  syscall: 'listen',
-  errno: 0
-}
+   ▲ Next.js 15.3.5
+   - Local:        http://localhost:3000
+   - Network:      http://21.0.22.124:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 1940ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 962ms (189 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 4.6s (878 modules)
+ GET / 200 in 1924ms
+ GET / 200 in 322ms
+ ○ Compiling /dashboard/student ...
+ ✓ Compiled /dashboard/student in 1178ms (901 modules)
+ GET /dashboard/student 200 in 1273ms
+ GET /dashboard/student 200 in 53ms
+ ○ Compiling /projects/create ...
+ ✓ Compiled /projects/create in 1290ms (1020 modules)
+ GET /projects/create 200 in 1358ms
+ ⚠ Cross origin request detected from preview-chat-d134dfab-d76e-4349-bb44-f487065ad9b8.space.z.ai to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ ✓ Compiled /_not-found in 379ms (1024 modules)
+ GET /records/undefined 404 in 697ms
+ GET /records/undefined 404 in 74ms
+ GET / 200 in 106ms
+ GET /dashboard/student 200 in 65ms
+ ○ Compiling /records/create ...
+ ✓ Compiled /records/create in 589ms (1037 modules)
+ GET /records/create 200 in 649ms
+ GET /dashboard/student 200 in 50ms
+ GET / 200 in 68ms
+ ○ Compiling /dashboard/university ...
+ ✓ Compiled /dashboard/university in 806ms (1044 modules)
+ GET /dashboard/university 200 in 876ms
+ ✓ Compiled /_not-found in 321ms (1048 modules)
+ GET /dashboard/university/students 404 in 627ms
+ GET /dashboard/university/students 404 in 66ms
+ GET / 200 in 95ms
+ GET /dashboard/university 200 in 51ms
+ GET /dashboard/university/projects 404 in 39ms
+ GET /dashboard/university/projects 404 in 51ms
+ GET / 200 in 63ms
+ GET /dashboard/university 200 in 43ms
+ ○ Compiling /leaderboards ...
+ ✓ Compiled /leaderboards in 627ms (1067 modules)
+ GET /leaderboards 200 in 694ms
+ GET /leaderboards 200 in 65ms
+ GET /leaderboards 200 in 32ms
+ GET / 200 in 144ms
+ ○ Compiling /dashboard/investor ...
+ ✓ Compiled /dashboard/investor in 831ms (1068 modules)
+ GET /dashboard/investor 200 in 910ms
+ ✓ Compiled /_not-found in 630ms (1072 modules)
+ GET /marketplace 404 in 705ms
+ GET /marketplace 404 in 68ms
+ GET / 200 in 95ms
+ ✓ Compiled /dashboard/student in 358ms (522 modules)
+ GET /dashboard/student 200 in 454ms
+ GET /records/create 200 in 63ms
+ GET /dashboard/student 200 in 46ms
+ ✓ Compiled /projects/create in 292ms (590 modules)
+ GET /projects/create 200 in 385ms
+ GET / 200 in 117ms
+ ○ Compiling /admin ...
+ ✓ Compiled /admin in 859ms (1067 modules)
+ GET /admin 200 in 934ms
+ ○ Compiling /admin/governance ...
+ ✓ Compiled /admin/governance in 640ms (1086 modules)
+ GET /admin/governance 200 in 776ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1188ms (1082 modules)
+ GET /admin/users 404 in 1225ms
+ GET /admin/users 404 in 28ms
+ GET /admin/governance 200 in 99ms
+ GET /admin/projects 404 in 56ms
+ GET /admin/governance 200 in 142ms
+ GET /admin/projects 404 in 45ms
+ GET /admin/projects 404 in 53ms
+ GET /admin/governance 200 in 108ms
+ GET /admin/content 404 in 9ms
+ GET /admin/content 404 in 49ms
+ GET /admin/governance 200 in 82ms
+ GET /governance 404 in 36ms
+ GET /governance 404 in 54ms
+ GET /admin/governance 200 in 85ms
+ ✓ Compiled /leaderboards in 282ms (581 modules)
+ GET /leaderboards 200 in 429ms
+ GET /admin/compliance 404 in 41ms
+ GET /admin/compliance 404 in 91ms
+ GET /admin/governance 200 in 106ms
+ ✓ Compiled in 766ms (511 modules)
+ GET /admin/governance 200 in 391ms
+ ✓ Compiled in 974ms (1259 modules)
+ GET /admin/governance 200 in 1085ms
+ GET /admin/governance 200 in 70ms
+ ✓ Compiled in 533ms (511 modules)
+ GET /admin/governance 200 in 436ms
+ GET / 200 in 208ms
+ GET / 200 in 89ms
+ GET / 200 in 68ms
+ GET / 200 in 154ms
+ ✓ Compiled in 417ms (511 modules)
+ GET / 200 in 634ms
+ ✓ Compiled in 332ms (511 modules)
+ GET / 200 in 737ms
+ ✓ Compiled in 285ms (511 modules)
+ GET / 200 in 393ms
+ ✓ Compiled in 292ms (511 modules)
+ GET / 200 in 398ms
+ ✓ Compiled in 340ms (511 modules)
+ GET / 200 in 409ms
+ GET / 200 in 109ms
+ GET / 200 in 176ms
+ ✓ Compiled in 374ms (511 modules)
+ GET / 200 in 374ms
+ ✓ Compiled in 336ms (511 modules)
+ GET / 200 in 21ms
+ ✓ Compiled in 361ms (511 modules)
+ GET / 200 in 651ms
+ GET / 200 in 114ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 726ms (1074 modules)
+ ⨯ error: Cannot find module './4447.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './4447.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 2.6s (1408 modules)
+ GET /_next/static/css/app/layout.css?v=1768443423443 500 in 9067ms
+ GET /_next/static/chunks/webpack.js?v=1768443423443 500 in 9043ms
+ GET /_next/static/chunks/main-app.js?v=1768443423443 404 in 282ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 866ms
+ GET /_next/static/chunks/app/page.js 404 in 125ms
+ GET /_next/static/chunks/app/layout.js 404 in 696ms
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/home/z/my-project/.next/cache/webpack/client-development-fallback/0.pack.gz_' -> '/home/z/my-project/.next/cache/webpack/client-development-fallback/0.pack.gz'
+ ○ Compiling /dashboard/student ...
+ ✓ Compiled /dashboard/student in 614ms (673 modules)
+ GET /dashboard/student 200 in 851ms
+ GET /_next/static/css/app/layout.css?v=1768443469566 404 in 579ms
+ GET /_next/static/chunks/main-app.js?v=1768443469566 404 in 629ms
+ GET /_next/static/chunks/app/layout.js 404 in 72ms
+ GET /_next/static/chunks/app/dashboard/student/page.js 404 in 524ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 977ms
+ GET / 200 in 121ms
+ GET /_next/static/css/app/layout.css?v=1768443488683 404 in 643ms
+ GET /_next/static/chunks/main-app.js?v=1768443488683 404 in 687ms
+ GET /_next/static/chunks/app/layout.js 404 in 662ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 1124ms
+ GET /_next/static/chunks/app/page.js 404 in 1589ms
+ ✓ Compiled in 467ms (757 modules)
+ ✓ Compiled in 404ms (757 modules)
+ ✓ Compiled in 1171ms (1550 modules)
+ ✓ Compiled in 550ms (757 modules)
+ ✓ Compiled in 684ms (757 modules)
+ ✓ Compiled in 448ms (757 modules)
+ ✓ Compiled in 1154ms (1550 modules)
+ ✓ Compiled in 512ms (757 modules)
+ ⨯ error: ENOENT reading "/home/z/my-project/.next/server/middleware-manifest.json"
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 805ms (1404 modules)
+ ⨯ error: Cannot find module './8548.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ GET / 404 in 9ms
+ ⨯ error: Cannot find module '/home/z/my-project/.next/server/middleware-manifest.json' from '/home/z/my-project/node_modules/next/dist/server/next-server.js'
+ ⨯ error: Cannot find module '/home/z/my-project/.next/server/middleware-manifest.json' from '/home/z/my-project/node_modules/next/dist/server/next-server.js'
+ ⨯ error: Cannot find module '/home/z/my-project/.next/server/middleware-manifest.json' from '/home/z/my-project/node_modules/next/dist/server/next-server.js'
+ ⨯ error: Cannot find module '/home/z/my-project/.next/server/middleware-manifest.json' from '/home/z/my-project/node_modules/next/dist/server/next-server.js'
+ ⨯ error: Cannot find module '/home/z/my-project/.next/server/middleware-manifest.json' from '/home/z/my-project/node_modules/next/dist/server/next-server.js'
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 867ms (1408 modules)
+error: Cannot find module '/home/z/my-project/.next/server/middleware-manifest.json' from '/home/z/my-project/node_modules/next/dist/server/next-server.js'
+error: Cannot find module '/home/z/my-project/.next/server/middleware-manifest.json' from '/home/z/my-project/node_modules/next/dist/server/next-server.js'
+error: Cannot find module '/home/z/my-project/.next/server/middleware-manifest.json' from '/home/z/my-project/node_modules/next/dist/server/next-server.js'
+error: Cannot find module '/home/z/my-project/.next/server/middleware-manifest.json' from '/home/z/my-project/node_modules/next/dist/server/next-server.js'
+error: Cannot find module '/home/z/my-project/.next/server/middleware-manifest.json' from '/home/z/my-project/node_modules/next/dist/server/next-server.js'
+error: Cannot find module '/home/z/my-project/.next/server/middleware-manifest.json' from '/home/z/my-project/node_modules/next/dist/server/next-server.js'
+ ⨯ error: Cannot find module './8548.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './8548.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './8548.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './8548.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './8548.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './8548.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ GET /_next/static/chunks/fallback/webpack.js 500 in 3799ms
+ GET /_next/static/chunks/fallback/webpack.js 500 in 3190ms
+ GET /_next/static/chunks/fallback/pages/_error.js 500 in 3552ms
+ GET /_next/static/chunks/fallback/pages/_error.js 500 in 3190ms
+ GET /_next/static/chunks/fallback/pages/_app.js 500 in 3550ms
+ GET /_next/static/chunks/fallback/pages/_app.js 500 in 3190ms
+ GET /_next/static/chunks/fallback/react-refresh.js 500 in 3551ms
+ GET /_next/static/chunks/fallback/react-refresh.js 500 in 3190ms
+ GET /_next/static/chunks/fallback/main.js 500 in 3550ms
+ GET /_next/static/chunks/fallback/main.js 500 in 3190ms
+ ✓ Compiled in 460ms (761 modules)
+ ✓ Compiled in 398ms (757 modules)
+ ✓ Compiled in 362ms (757 modules)
+ ✓ Compiled in 413ms (757 modules)
+ ✓ Compiled in 425ms (757 modules)
+ ✓ Compiled in 1244ms (1550 modules)
+ ✓ Compiled in 547ms (757 modules)
+ ✓ Compiled in 1368ms (1550 modules)
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 663ms (1404 modules)
+ ⨯ error: Cannot find module './8548.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ GET / 500 in 1225ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 659ms (1408 modules)
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ GET /_next/static/chunks/fallback/webpack.js 500 in 3015ms
+ GET /_next/static/chunks/fallback/main.js 500 in 2659ms
+ GET /_next/static/chunks/fallback/pages/_error.js 500 in 2598ms
+ GET /_next/static/chunks/fallback/pages/_app.js 500 in 2597ms
+ GET /_next/static/chunks/fallback/react-refresh.js 500 in 2598ms
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './8548.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ GET / 500 in 565ms
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ GET /_next/static/chunks/fallback/webpack.js 500 in 511ms
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ GET /_next/static/chunks/fallback/main.js 500 in 1925ms
+ GET /_next/static/chunks/fallback/react-refresh.js 500 in 1924ms
+ GET /_next/static/chunks/fallback/pages/_error.js 500 in 1923ms
+ GET /_next/static/chunks/fallback/pages/_app.js 500 in 1922ms
+ ✓ Compiled in 552ms (761 modules)
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './8548.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ GET / 500 in 558ms
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ GET /_next/static/chunks/fallback/webpack.js 500 in 481ms
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ ⨯ error: Cannot find module './7719.js' from '/home/z/my-project/.next/server/webpack-runtime.js'
+ GET /_next/static/chunks/fallback/main.js 500 in 1835ms
+ GET /_next/static/chunks/fallback/pages/_app.js 500 in 1834ms
+ GET /_next/static/chunks/fallback/react-refresh.js 500 in 1833ms
+ GET /_next/static/chunks/fallback/pages/_error.js 500 in 1833ms
+ ✓ Compiled in 421ms (757 modules)
+ ✓ Compiled in 505ms (757 modules)
+ ✓ Compiled in 402ms (757 modules)
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)
 [?25h

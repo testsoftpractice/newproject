@@ -1,3 +1,5 @@
+import { Mail, HelpCircle, BookOpen, Shield, Database, Award, Users, GraduationCap, FileText, Lock, Phone } from 'lucide-react';
+
 export default function SupportPage() {
   return (
     <div className="min-h-screen bg-background">

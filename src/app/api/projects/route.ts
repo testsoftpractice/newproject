@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { ProjectCategory, ProjectStatus } from '@prisma/client'
+import { ProjectCategory, ProjectStatus, UserRole } from '@prisma/client'
 
 // GET /api/projects - List all projects with filters
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication (any role can view projects)
+    const auth = await requireAuth(request)
+    if ('status' in auth) return auth
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const category = searchParams.get('category')
@@ -111,6 +114,14 @@ export async function GET(request: NextRequest) {
 // POST /api/projects - Create a new project
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication and check role
+    const auth = await requireAuth(request)
+    if ('status' in auth) return auth
+
+    // Only students, university admins, and mentors can create projects
+    const allowedRoles = ['STUDENT', 'UNIVERSITY_ADMIN', 'PLATFORM_ADMIN', 'MENTOR']
+    
+
     const body = await request.json()
     const {
       title,
@@ -122,6 +133,22 @@ export async function POST(request: NextRequest) {
       investmentGoal,
       startDate,
     } = body
+
+    // Validate user can only create projects for themselves
+    if (projectLeadId !== auth.user.userId && auth.user.userRole !== 'PLATFORM_ADMIN' && auth.user.userRole !== 'UNIVERSITY_ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden - You can only create projects for yourself' },
+        { status: 403 }
+      )
+    }
+
+    // Validate investment goal is non-negative
+    if (investmentGoal && parseFloat(investmentGoal) < 0) {
+      return NextResponse.json(
+        { error: 'Invalid investment goal - must be 0 or greater' },
+        { status: 400 }
+      )
+    }
 
     // Create project
     const project = await db.project.create({

@@ -1,38 +1,63 @@
-import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
 
+// GET /api/dashboard/employer/stats - Get employer dashboard statistics
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.nextUrl.searchParams.get("userId")
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
 
     if (!userId) {
-      return NextResponse.json({ success: false, error: "User ID required" }, { status: 400 })
+      return NextResponse.json(
+        { success: false, error: 'User ID is required' },
+        { status: 400 }
+      )
     }
 
-    const [totalCandidates, activeCandidates, verificationRequests, pendingRatings, averageRating] = await Promise.all([
-      db.user.count({ where: { role: "STUDENT", status: "ACTIVE" } }),
-      db.verificationRequest.count({ where: { employerId: userId, status: "PENDING" } }),
-      db.rating.count({ where: { sourceId: userId } }),
-      db.rating.aggregate({
-        where: { sourceId: userId },
-        _avg: { execution: true, collaboration: true, leadership: true, ethics: true, reliability: true },
-      }),
-    ])
+    // Fetch employer's verification requests
+    const allRequests = await db.verificationRequest.findMany({
+      where: { requesterId: userId },
+      orderBy: { createdAt: 'desc' },
+    })
 
-    const avgOverallRating = averageRating._avg ? Math.round((averageRating._avg.execution + averageRating._avg.collaboration + averageRating._avg.leadership + averageRating._avg.ethics + averageRating._avg.reliability) * 10 / 5 / 10) : 0
+    // Calculate statistics
+    const totalRequests = allRequests.length
+    const pendingRequests = allRequests.filter(r => r.status === 'PENDING').length
+    const approvedRequests = allRequests.filter(r => r.status === 'APPROVED').length
+    const rejectedRequests = allRequests.filter(r => r.status === 'REJECTED').length
+    const expiredRequests = allRequests.filter(r => r.status === 'EXPIRED').length
+
+    // Calculate average employer rating (from completed verifications)
+    const ratedRequests = allRequests.filter(r => r.employerRating !== null)
+    const averageRating =
+      ratedRequests.length > 0
+        ? ratedRequests.reduce((sum, r) => sum + (r.employerRating || 0), 0) / ratedRequests.length
+        : 0
+
+    // Calculate total hires (approved requests with employer ratings)
+    const totalHires = allRequests.filter(
+      r => r.status === 'APPROVED' && r.employerRating !== null
+    ).length
+
+    const stats = {
+      totalRequests,
+      pendingRequests,
+      approvedRequests,
+      rejectedRequests,
+      expiredRequests,
+      totalHires,
+      averageRating: parseFloat(averageRating.toFixed(2)),
+    }
 
     return NextResponse.json({
       success: true,
-      data: {
-        totalCandidates,
-        activeCandidates,
-        verificationRequests,
-        pendingRatings,
-        averageRating: avgOverallRating,
-      },
+      data: stats,
     })
   } catch (error: any) {
-    console.error("Get employer stats error:", error)
-    return NextResponse.json({ success: false, error: "Failed to fetch employer statistics" }, { status: 500 })
+    console.error('Get employer dashboard stats error:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }

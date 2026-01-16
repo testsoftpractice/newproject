@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -42,6 +42,14 @@ model User {
   phone             String?
   linkedinUrl       String?
   portfolioUrl      String?
+
+  // Security & Authentication
+  password          String?
+  lastPasswordChange DateTime?
+  loginAttempts     Int                @default(0)
+  lockedAt          DateTime?
+  emailVerified     Boolean            @default(false)
+  emailVerifiedAt   DateTime?
 
   // Student Specific
   universityId      String?
@@ -747,14 +755,4 @@ model Notification {
   @@index([createdAt])
 }
 
-
-  id            String   @id @default(cuid())
-  action        String
-  userId        String?
-  timestamp     DateTime @default(now())
-  ip            String
-  status        String
-  details       String?
-  user          User @relation("Audit User", fields: [userId])
-}
 

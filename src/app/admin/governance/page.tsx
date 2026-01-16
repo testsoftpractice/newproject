@@ -400,7 +400,7 @@ export default function GovernancePage() {
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full" asChild>
-                  <Link href="/governance">
+                  <Link href="/admin/governance">
                     <FileText className="h-4 w-4 mr-2" />
                     View Governance
                   </Link>

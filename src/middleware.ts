@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTokenFromHeaders, verifyToken } from '@/lib/auth/jwt'
+import { verifyToken } from '@/lib/auth/jwt'
 
 // Public paths that don't require authentication
-const publicPaths = ['/', '/auth', '/terms', '/privacy', '/forgot-password']
+const publicPaths = [
+  '/',
+  '/auth',
+  '/terms',
+  '/privacy',
+  '/forgot-password',
+  '/reset-password',
+  '/dashboard',
+  '/projects',
+  '/marketplace',
+  '/leaderboards',
+  '/support',
+]
 
 export function middleware(request: NextRequest) {
   const { pathname } = new URL(request.url)
@@ -12,18 +24,24 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Verify JWT token
-  const token = getTokenFromHeaders(request.headers)
-
-  if (!token) {
-    return NextResponse.redirect(new URL('/auth', request.url))
+  // For API routes, verify JWT token in Authorization header
+  const authHeader = request.headers.get('authorization')
+  if (!authHeader) {
+    return NextResponse.json(
+      { error: 'Unauthorized - No token provided' },
+      { status: 401 }
+    )
   }
 
+  // Extract token from "Bearer <token>" format
+  const token = authHeader.replace('Bearer ', '')
   const decoded = verifyToken(token)
 
   if (!decoded) {
-    // Token is invalid, redirect to login
-    return NextResponse.redirect(new URL('/auth', request.url))
+    return NextResponse.json(
+      { error: 'Unauthorized - Invalid token' },
+      { status: 401 }
+    )
   }
 
   // Token is valid, proceed to protected route
@@ -42,14 +60,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    '/:path*',
   ],
 }

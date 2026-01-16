@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { verifyPassword, generateToken, getTokenFromHeaders } from '@/lib/auth/jwt'
+import { verifyPassword, generateToken } from '@/lib/auth/jwt'
 import { loginSchema } from '@/lib/validations/schemas'
 import { z } from 'zod'
 
@@ -13,6 +13,31 @@ export async function POST(request: NextRequest) {
     const validatedData = loginSchema.parse(body)
     const { email, password } = validatedData
 
+    // Get client IP for rate limiting
+    const ip = request.headers.get('x-forwarded-for') || 
+               request.headers.get('x-real-ip') || 
+               'unknown'
+
+    // Simple in-memory rate limiter (in production, use Redis)
+    const loginAttempts = new Map<string, { count: number, resetTime: number }>()
+    const key = `login:${ip}`
+    
+    // Check rate limit: 5 attempts per 5 minutes
+    const now = Date.now()
+    const attempts = loginAttempts.get(key)
+    
+    if (attempts && attempts.count >= 5 && attempts.resetTime > now) {
+      // Rate limit exceeded
+      const waitTime = Math.ceil((attempts.resetTime - now) / 60000) // Convert to minutes
+      return NextResponse.json(
+        { 
+          error: 'Too many login attempts',
+          message: `Please wait ${waitTime} minute${waitTime > 1 ? 's' : ''} before trying again`
+        },
+        { status: 429 }
+      )
+    }
+
     // Find user by email
     const user = await db.user.findUnique({
       where: { email },
@@ -22,24 +47,77 @@ export async function POST(request: NextRequest) {
     })
 
     if (!user) {
+      // Log failed attempt
+      if (!attempts) {
+        loginAttempts.set(key, { count: 1, resetTime: now + 300000 }) // 5 minutes
+      } else {
+        loginAttempts.set(key, { count: attempts.count + 1, resetTime: now + 300000 })
+      }
+      
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       )
     }
 
-    // Verify password (in production, compare with hashed password)
-    // For demo, we'll allow any password for testing
-    const passwordValid = process.env.NODE_ENV === 'production'
-      ? await verifyPassword(password, user.password as string)
-      : true // Allow any password in development for testing
+    // Check if account is locked
+    if (user.lockedAt && user.lockedAt > new Date()) {
+      const waitMinutes = Math.ceil((user.lockedAt.getTime() - Date.now()) / 60000)
+      return NextResponse.json(
+        {
+          error: 'Account temporarily locked',
+          message: `Too many failed login attempts. Please wait ${waitMinutes} minute${waitMinutes > 1 ? 's' : ''} or contact support.`
+        },
+        { status: 423 }
+      )
+    }
+
+    // Verify password using bcrypt
+    const passwordValid = await verifyPassword(password, user.password as string)
 
     if (!passwordValid) {
+      // Increment login attempts
+      const newAttempts = (user.loginAttempts || 0) + 1
+      
+      // Lock account after 5 failed attempts for 15 minutes
+      if (newAttempts >= 5) {
+        await db.user.update({
+          where: { id: user.id },
+          data: {
+            loginAttempts: newAttempts,
+            lockedAt: new Date(Date.now() + 900000), // Lock for 15 minutes
+          },
+        })
+        
+        return NextResponse.json(
+          {
+            error: 'Account temporarily locked',
+            message: 'Too many failed login attempts. Please try again in 15 minutes or contact support.'
+          },
+          { status: 423 }
+        )
+      }
+      
+      await db.user.update({
+        where: { id: user.id },
+        data: { loginAttempts: newAttempts },
+      })
+      
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       )
     }
+
+    // Login successful - reset attempts and unlock account
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        loginAttempts: 0,
+        lockedAt: null,
+        lastPasswordChange: new Date(), // Track when user logged in successfully
+      },
+    })
 
     // Generate JWT token
     const token = generateToken({

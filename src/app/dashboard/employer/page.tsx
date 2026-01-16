@@ -1,55 +1,65 @@
 'use client'
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Progress } from '@/components/ui/progress'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Briefcase,
   Users,
-  Shield,
-  TrendingUp,
-  Calendar,
-  Clock,
-  Star,
   FileText,
-  Plus,
+  TrendingUp,
   Search,
-  Filter,
-} from "lucide-react"
-import Link from "next/link"
-import { useAuth } from "@/contexts/auth-context"
-import { toast } from "@/hooks/use-toast"
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  Shield,
+  ExternalLink,
+  Plus,
+  Loader2,
+} from 'lucide-react'
+import Link from 'next/link'
+import { useAuth } from '@/contexts/auth-context'
+import { toast } from '@/hooks/use-toast'
 
 export default function EmployerDashboard() {
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState("overview")
-  const [searchQuery, setSearchQuery] = useState("")
+  const [activeTab, setActiveTab] = useState('overview')
 
+  // Data states (fetched from API)
   const [stats, setStats] = useState({
-    totalCandidates: 0,
-    verifiedCandidates: 0,
     totalRequests: 0,
     pendingRequests: 0,
+    approvedRequests: 0,
+    rejectedRequests: 0,
+    totalHires: 0,
     averageRating: 0,
   })
 
-  const [candidates, setCandidates] = useState<any[]>([])
-  const [verificationRequests, setVerificationRequests] = useState<any[]>([])
-  const [ratings, setRatings] = useState<any[]>([])
+  const [requests, setRequests] = useState<any[]>([])
 
   const [loading, setLoading] = useState({
     stats: false,
-    candidates: false,
-    verifications: false,
-    ratings: false,
+    requests: false,
   })
 
+  // Fetch stats from API
   useEffect(() => {
     const fetchStats = async () => {
       if (!user) return
+
       try {
         setLoading(prev => ({ ...prev, stats: true }))
         const response = await fetch(`/api/dashboard/employer/stats?userId=${user.id}`)
@@ -57,525 +67,382 @@ export default function EmployerDashboard() {
         if (data.success) {
           setStats(data.data)
         } else {
-          toast({ title: "Error", description: data.error || "Failed to fetch statistics", variant: "destructive" })
+          toast({
+            title: 'Error',
+            description: data.error || 'Failed to fetch statistics',
+            variant: 'destructive'
+          })
         }
       } catch (error) {
-        console.error("Fetch stats error:", error)
+        console.error('Fetch stats error:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch statistics',
+          variant: 'destructive'
+        })
       } finally {
         setLoading(prev => ({ ...prev, stats: false }))
       }
     }
 
-    if (activeTab === "overview") {
+    if (activeTab === 'overview') {
       fetchStats()
     }
   }, [activeTab, user])
 
+  // Fetch verification requests from API
   useEffect(() => {
-    const fetchCandidates = async () => {
+    const fetchRequests = async () => {
       if (!user) return
+
       try {
-        setLoading(prev => ({ ...prev, candidates: true }))
-        const response = await fetch(`/api/users?role=STUDENT&limit=20`)
+        setLoading(prev => ({ ...prev, requests: true }))
+        const response = await fetch(`/api/verification?requesterId=${user.id}`)
         const data = await response.json()
         if (data.success) {
-          setCandidates(data.data.users || [])
+          setRequests(data.data || [])
         } else {
-          toast({ title: "Error", description: data.error || "Failed to fetch candidates", variant: "destructive" })
+          toast({
+            title: 'Error',
+            description: data.error || 'Failed to fetch verification requests',
+            variant: 'destructive'
+          })
         }
       } catch (error) {
-        console.error("Fetch candidates error:", error)
+        console.error('Fetch requests error:', error)
       } finally {
-        setLoading(prev => ({ ...prev, candidates: false }))
+        setLoading(prev => ({ ...prev, requests: false }))
       }
     }
 
-    if (activeTab === "candidates") {
-      fetchCandidates()
-    }
-  }, [activeTab, user])
-
-  useEffect(() => {
-    const fetchVerifications = async () => {
-      if (!user) return
-      try {
-        setLoading(prev => ({ ...prev, verifications: true }))
-        const response = await fetch(`/api/verification?employerId=${user.id}`)
-        const data = await response.json()
-        if (data.success) {
-          setVerificationRequests(data.data || [])
-        } else {
-          toast({ title: "Error", description: data.error || "Failed to fetch verifications", variant: "destructive" })
-        }
-      } catch (error) {
-        console.error("Fetch verifications error:", error)
-      } finally {
-        setLoading(prev => ({ ...prev, verifications: false }))
-      }
-    }
-
-    if (activeTab === "verifications") {
-      fetchVerifications()
-    }
-  }, [activeTab, user])
-
-  useEffect(() => {
-    const fetchRatings = async () => {
-      if (!user) return
-      try {
-        setLoading(prev => ({ ...prev, ratings: true }))
-        const response = await fetch(`/api/ratings?sourceId=${user.id}`)
-        const data = await response.json()
-        if (data.success) {
-          setRatings(data.data || [])
-        } else {
-          toast({ title: "Error", description: data.error || "Failed to fetch ratings", variant: "destructive" })
-        }
-      } catch (error) {
-        console.error("Fetch ratings error:", error)
-      } finally {
-        setLoading(prev => ({ ...prev, ratings: false }))
-      }
-    }
-
-    if (activeTab === "ratings") {
-      fetchRatings()
+    if (activeTab === 'requests') {
+      fetchRequests()
     }
   }, [activeTab, user])
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-background">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <header className="border-b bg-background sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
             <div className="flex items-center gap-2">
-              <Shield className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl font-bold">Employer Dashboard</h1>
+              <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
+              <h1 className="text-xl sm:text-2xl font-bold truncate">Employer Dashboard</h1>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">{user?.name || "Employer"}</span>
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-[150px] sm:max-w-none">{user?.name || 'Employer'}</span>
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/">Back to Home</Link>
+                <Link href="/">
+                  <ArrowRight className="h-4 w-4 mr-2 sm:mr-0 sm:hidden" />
+                  <span className="hidden sm:inline">Back to Home</span>
+                  <span className="sm:hidden">Home</span>
+                </Link>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {activeTab === "overview" && (
-            <div className="grid gap-6 lg:grid-cols-3">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Overview</CardTitle>
-                  <CardDescription>Your employer platform metrics</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {loading.stats ? (
-                    <div className="animate-pulse text-center py-8">
-                      <div className="h-6 w-6 border-2 border-t-blue-500 border-r-transparent rounded-full animate-spin mx-auto" />
-                      <p className="text-sm text-muted-foreground mt-2">Loading metrics...</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="text-center mb-4">
-                        <div className="text-5xl font-bold">{stats.totalCandidates}</div>
-                        <div className="text-sm text-muted-foreground">Total Candidates</div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center">
-                          <div className="text-3xl font-bold text-blue-500">{stats.verifiedCandidates}</div>
-                          <div className="text-sm text-muted-foreground">Verified</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-3xl font-bold">{stats.pendingRequests}</div>
-                          <div className="text-sm text-muted-foreground">Pending Requests</div>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                        <div className="text-center">
-                          <div className="text-3xl font-bold text-green-500">{stats.approvedRequests}</div>
-                          <div className="text-sm text-muted-foreground">Approved Requests</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-3xl font-bold text-red-500">{stats.rejectedRequests}</div>
-                          <div className="text-sm text-muted-foreground">Rejected Requests</div>
-                        </div>
-                      </div>
-                      <div className="text-center pt-4 border-t">
-                        <div className="text-3xl font-bold text-yellow-500">{stats.averageRating.toFixed(1)}</div>
-                        <div className="text-sm text-muted-foreground">Average Rating</div>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+      <main className="container mx-auto px-4 py-6 sm:py-8 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="requests">Verification Requests</TabsTrigger>
+            </TabsList>
 
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>Latest verification and rating actions</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-5 w-5 text-blue-500" />
-                    <div>
-                      <div className="font-medium">This week</div>
-                      <div className="text-sm text-muted-foreground">
-                        +{stats.totalCandidates - stats.verifiedCandidates} new candidates joined
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Shield className="h-5 w-5 text-green-500" />
-                    <div>
-                      <div className="font-medium">This week</div>
-                      <div className="text-sm text-muted-foreground">
-                        {stats.approvedRequests} verification requests approved
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Star className="h-5 w-5 text-yellow-500" />
-                    <div>
-                      <div className="font-medium">This week</div>
-                      <div className="text-sm text-muted-foreground">
-                        {(stats.averageRating * stats.totalCandidates).toFixed(0)} total ratings given
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                  <CardDescription>Common employer tasks</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid gap-3">
-                    <Button variant="outline" className="w-full" asChild>
-                      <Link href="/dashboard/employer/candidates">
-                        <Users className="h-4 w-4 mr-2" />
-                        Browse Candidates
-                      </Link>
-                    </Button>
-                    <Button variant="outline" className="w-full" asChild>
-                      <Link href="/dashboard/employer/verification-requests">
-                        <Shield className="h-4 w-4 mr-2" />
-                        Manage Requests
-                      </Link>
-                    </Button>
-                  </div>
-                  <div className="grid gap-3">
-                    <Button variant="outline" className="w-full" asChild>
-                      <Link href="/records/create">
-                        <FileText className="h-4 w-4 mr-2" />
-                        Create Record
-                      </Link>
-                    </Button>
-                    <Button variant="outline" className="w-full" asChild>
-                      <Link href="/marketplace">
-                        <TrendingUp className="h-4 w-4 mr-2" />
-                        Browse Marketplace
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === "candidates" && (
-            <div className="space-y-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold">Talent Search</h2>
-                  <p className="text-muted-foreground">Find verified candidates for your open positions</p>
-                </div>
-                <Button asChild>
-                  <Link href="/dashboard/employer/candidates">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Post Job
-                  </Link>
-                </Button>
-              </div>
-
-              <div className="flex gap-4 mb-6">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search candidates by name, email, university, or major..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                    disabled={loading.candidates}
-                  />
-                </div>
-                <Button disabled={loading.candidates}>Search</Button>
-              </div>
-
-              {loading.candidates ? (
-                <div className="animate-pulse text-center py-12">
-                  <div className="h-12 w-12 border-2 border-t-blue-500 border-r-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-sm text-muted-foreground mt-2">Loading candidates...</p>
-                </div>
-              ) : candidates.length > 0 ? (
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {candidates.map((candidate) => (
-                    <Card key={candidate.id}>
-                      <CardHeader>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-12 w-12">
-                            <AvatarFallback className="text-lg bg-primary text-primary-foreground">
-                              {candidate.name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <CardTitle>{candidate.name}</CardTitle>
-                            <CardDescription>
-                              {candidate.university || "No university"} • {candidate.major || "No major"}
-                            </CardDescription>
-                            <Badge variant={candidate.verified ? "default" : "secondary"}>
-                              {candidate.verified ? "Verified" : "Unverified"}
-                            </Badge>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-4">
-                        <Button variant="default" className="w-full" asChild>
-                          <Link href={`/records/${candidate.id}`}>
-                            View Profile
-                          </Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
-                  <CardContent className="p-12 text-center">
-                    <Users className="h-20 w-20 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-xl font-semibold mb-2">No Candidates Found</h3>
-                    <p className="text-muted-foreground mb-6">
-                      Adjust your search criteria or filters to find candidates that match your requirements.
-                    </p>
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <CardDescription className="text-xs sm:text-sm">Total Requests</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl sm:text-3xl font-bold break-words">{stats.totalRequests}</div>
                   </CardContent>
                 </Card>
-              )}
-            </div>
-          )}
 
-          {activeTab === "verifications" && (
-            <div className="space-y-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold">Verification Requests</h2>
-                  <p className="text-muted-foreground">Manage employer-initiated verification requests</p>
-                </div>
-                <Button asChild>
-                  <Link href="/dashboard/employer/verification-requests">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Request
-                  </Link>
-                </Button>
-              </div>
-
-              {loading.verifications ? (
-                <div className="animate-pulse text-center py-12">
-                  <div className="h-12 w-12 border-2 border-t-blue-500 border-r-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-sm text-muted-foreground mt-2">Loading verifications...</p>
-                </div>
-              ) : verificationRequests.length > 0 ? (
-                <div className="grid gap-4 lg:grid-cols-1">
-                  {verificationRequests.map((request) => (
-                    <Card key={request.id}>
-                      <CardHeader>
-                        <CardTitle>{request.student?.name || "Candidate"}</CardTitle>
-                        <CardDescription>Verification Request</CardDescription>
-                        <Badge
-                          variant={
-                            request.status === "PENDING" ? "default" :
-                            request.status === "APPROVED" ? "default" : "secondary"
-                          }
-                        >
-                          {request.status}
-                        </Badge>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="space-y-2">
-                          <div className="text-sm font-medium">Type</div>
-                          <Badge variant="outline">{request.type}</Badge>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">Purpose</div>
-                          <div className="text-sm text-muted-foreground">{request.purpose}</div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="text-sm font-medium">Requested</div>
-                          <div className="text-sm">{new Date(request.createdAt).toLocaleDateString()}</div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="text-sm font-medium">Expires</div>
-                          <div className="text-sm">{new Date(request.expiresAt).toLocaleDateString()}</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
                 <Card>
-                  <CardContent className="p-12 text-center">
-                    <Shield className="h-20 w-20 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-xl font-semibold mb-2">No Verification Requests</h3>
-                    <p className="text-muted-foreground mb-6">
-                      You haven't made any verification requests yet. Create a request to verify a candidate's professional records.
-                    </p>
-                    <Button asChild className="w-full">
-                      <Link href="/dashboard/employer/verification-requests">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create Your First Request
-                      </Link>
-                    </Button>
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <CardDescription className="text-xs sm:text-sm">Pending</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl sm:text-3xl font-bold text-yellow-500 break-words">{stats.pendingRequests}</div>
                   </CardContent>
                 </Card>
-              )}
-            </div>
-          )}
 
-          {activeTab === "ratings" && (
-            <div className="space-y-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold">Given Ratings</h2>
-                  <p className="text-muted-foreground">View all ratings you've provided to candidates</p>
-                </div>
+                <Card>
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <CardDescription className="text-xs sm:text-sm">Approved</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl sm:text-3xl font-bold text-green-500 break-words">{stats.approvedRequests}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <CardDescription className="text-xs sm:text-sm">Total Hires</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl sm:text-3xl font-bold text-blue-500 break-words">{stats.totalHires}</div>
+                  </CardContent>
+                </Card>
               </div>
 
-              {loading.ratings ? (
-                <div className="animate-pulse text-center py-12">
-                  <div className="h-12 w-12 border-2 border-t-blue-500 border-r-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-sm text-muted-foreground mt-2">Loading ratings...</p>
-                </div>
-              ) : ratings.length > 0 ? (
-                <div className="grid gap-4 lg:grid-cols-1">
-                  {ratings.map((rating) => (
-                    <Card key={rating.id}>
-                      <CardHeader>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback className="text-lg bg-primary text-primary-foreground">
-                              {rating.candidate?.name?.charAt(0) || "C"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <CardTitle>{rating.candidate?.name || "Candidate"}</CardTitle>
-                            <CardDescription>
-                              {rating.candidate?.university || "No university"} • {rating.candidate?.major || "No major"}
-                            </CardDescription>
-                          </div>
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(rating.createdAt).toLocaleDateString()}
-                        </span>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Verification Overview</CardTitle>
+                    <CardDescription>Your verification request statistics</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 sm:space-y-4">
+                    {loading.stats ? (
+                      <div className="animate-pulse text-center py-6 sm:py-8">
+                        <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto text-muted-foreground" />
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-2">Loading metrics...</p>
+                      </div>
+                    ) : (
+                      <>
                         <div className="space-y-2">
-                          <div className="text-sm font-medium">Overall Rating</div>
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                  key={star}
-                                  className={`h-4 w-4 ${
-                                    star <= Math.round(rating.overallRating)
-                                      ? "text-yellow-500 fill-current"
-                                      : "text-gray-300"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-lg font-bold">
-                              {rating.overallRating.toFixed(1)}
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Approved Rate</span>
+                            <span className="font-semibold">
+                              {stats.totalRequests > 0
+                                ? Math.round((stats.approvedRequests / stats.totalRequests) * 100)
+                                : 0}%
                             </span>
                           </div>
+                          <Progress
+                            value={stats.totalRequests > 0 ? (stats.approvedRequests / stats.totalRequests) * 100 : 0}
+                            className="h-2 sm:h-3"
+                          />
                         </div>
-                        <div className="grid grid-cols-5 gap-2 pt-3">
-                          <div className="text-center">
-                            <div className="text-xs text-muted-foreground mb-1">Execution</div>
-                            <div className="text-lg font-bold">
-                              {rating.execution.toFixed(1)}
-                            </div>
+
+                        <div className="space-y-2 pt-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Rejected Rate</span>
+                            <span className="font-semibold">
+                              {stats.totalRequests > 0
+                                ? Math.round((stats.rejectedRequests / stats.totalRequests) * 100)
+                                : 0}%
+                            </span>
                           </div>
-                          <div className="text-center">
-                            <div className="text-xs text-muted-foreground mb-1">Collaboration</div>
-                            <div className="text-lg font-bold">
-                              {rating.collaboration.toFixed(1)}
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-xs text-muted-foreground mb-1">Leadership</div>
-                            <div className="text-lg font-bold">
-                              {rating.leadership.toFixed(1)}
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-xs text-muted-foreground mb-1">Ethics</div>
-                            <div className="text-lg font-bold">
-                              {rating.ethics.toFixed(1)}
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-xs text-muted-foreground mb-1">Reliability</div>
-                            <div className="text-lg font-bold">
-                              {rating.reliability.toFixed(1)}
-                            </div>
-                          </div>
+                          <Progress
+                            value={stats.totalRequests > 0 ? (stats.rejectedRequests / stats.totalRequests) * 100 : 0}
+                            className="h-2 sm:h-3"
+                          />
                         </div>
-                        {rating.comments && (
-                          <div className="mt-3 pt-3 border-t">
-                            <div className="text-sm font-medium mb-2">Comments</div>
-                            <div className="text-sm text-muted-foreground">{rating.comments}</div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                    <CardDescription>Common employer tasks</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Button variant="outline" className="w-full justify-start text-sm" asChild>
+                      <Link href="/dashboard/employer/verification-requests">
+                        <Search className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">Browse Student Records</span>
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start text-sm" asChild>
+                      <Link href="/records/create">
+                        <Plus className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">Create Verification Request</span>
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start text-sm" asChild>
+                      <Link href="/jobs/create">
+                        <Briefcase className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">Post Job Listings</span>
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start text-sm" asChild>
+                      <Link href="/suppliers/create">
+                        <Users className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">List Your Business</span>
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Explore Marketplaces</CardTitle>
+                    <CardDescription>Access opportunities, suppliers, and more</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-2">
+                      <Button variant="outline" className="h-auto flex-col gap-2 py-3 sm:py-4" asChild>
+                        <Link href="/marketplace">
+                          <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+                          <div className="text-center">
+                            <div className="font-semibold text-xs sm:text-sm">Investment</div>
+                            <div className="text-xs text-muted-foreground hidden sm:block">Browse projects</div>
                           </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </Link>
+                      </Button>
+                      <Button variant="outline" className="h-auto flex-col gap-2 py-3 sm:py-4" asChild>
+                        <Link href="/needs">
+                          <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
+                          <div className="text-center">
+                            <div className="font-semibold text-xs sm:text-sm">Needs</div>
+                            <div className="text-xs text-muted-foreground hidden sm:block">Project requests</div>
+                          </div>
+                        </Link>
+                      </Button>
+                      <Button variant="outline" className="h-auto flex-col gap-2 py-3 sm:py-4" asChild>
+                        <Link href="/suppliers">
+                          <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+                          <div className="text-center">
+                            <div className="font-semibold text-xs sm:text-sm">Suppliers</div>
+                            <div className="text-xs text-muted-foreground hidden sm:block">Find services</div>
+                          </div>
+                        </Link>
+                      </Button>
+                      <Button variant="outline" className="h-auto flex-col gap-2 py-3 sm:py-4" asChild>
+                        <Link href="/jobs">
+                          <Briefcase className="h-5 w-5 sm:h-6 sm:w-6" />
+                          <div className="text-center">
+                            <div className="font-semibold text-xs sm:text-sm">Jobs</div>
+                            <div className="text-xs text-muted-foreground hidden sm:block">Find candidates</div>
+                          </div>
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Verification Requests Tab */}
+            <TabsContent value="requests" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold">Verification Requests</h2>
+                  <p className="text-sm sm:text-base text-muted-foreground">Manage your verification requests</p>
                 </div>
+                <Button className="text-sm" asChild>
+                  <Link href="/records/create">
+                    <Plus className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">New Request</span>
+                    <span className="sm:hidden">New</span>
+                  </Link>
+                </Button>
+              </div>
+
+              {loading.requests ? (
+                <div className="text-center py-12">
+                  <Loader2 className="h-12 w-12 animate-spin mx-auto text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mt-2">Loading requests...</p>
+                </div>
+              ) : requests.length > 0 ? (
+                <Card>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Student</TableHead>
+                          <TableHead className="hidden md:table-cell">Purpose</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="hidden lg:table-cell">Expires</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {requests.map((request) => (
+                          <TableRow key={request.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                                  <AvatarImage src={request.subject?.avatar} />
+                                  <AvatarFallback className="text-sm sm:text-base">
+                                    {request.subject?.name?.charAt(0) || 'S'}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                  <div className="font-medium text-sm sm:text-base truncate">
+                                    {request.subject?.name || 'Unknown'}
+                                  </div>
+                                  <div className="text-xs sm:text-sm text-muted-foreground truncate">
+                                    {request.subject?.email || ''}
+                                  </div>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              <div className="text-sm truncate max-w-[150px]">
+                                {request.purpose || 'Background Check'}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  request.status === 'APPROVED'
+                                    ? 'default'
+                                    : request.status === 'PENDING'
+                                    ? 'secondary'
+                                    : request.status === 'EXPIRED'
+                                    ? 'outline'
+                                    : 'destructive'
+                                }
+                                className="text-xs"
+                              >
+                                {request.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              <div className="text-sm text-muted-foreground">
+                                {request.expiresAt
+                                  ? new Date(request.expiresAt).toLocaleDateString()
+                                  : 'N/A'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                {request.status === 'APPROVED' && (
+                                  <Button size="sm" variant="outline" asChild>
+                                    <Link href={`/records/${request.id}/view`}>
+                                      <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                                      <span className="hidden sm:inline">View</span>
+                                    </Link>
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
               ) : (
                 <Card>
-                  <CardContent className="p-12 text-center">
-                    <Star className="h-20 w-20 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-xl font-semibold mb-2">No Ratings Given</h3>
-                    <p className="text-muted-foreground mb-6">
-                      You haven't provided any ratings yet. After verifying a candidate's records,
-                      you can leave a rating on their performance across 5 dimensions.
+                  <CardContent className="p-8 sm:p-12 text-center">
+                    <FileText className="h-16 w-16 sm:h-20 sm:w-20 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2">No Verification Requests</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground mb-6">
+                      You haven't submitted any verification requests yet. Create a request to
+                      verify student professional records.
                     </p>
-                    <Button asChild className="w-full">
-                      <Link href="/dashboard/employer/candidates">
-                        <Shield className="h-4 w-4 mr-2" />
-                        Verify a Candidate
+                    <Button asChild>
+                      <Link href="/records/create">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Verification Request
                       </Link>
                     </Button>
                   </CardContent>
                 </Card>
               )}
-            </div>
-          )}
-
-          <Card>
-            <CardContent className="p-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="candidates">Candidates</TabsTrigger>
-                  <TabsTrigger value="verifications">Requests</TabsTrigger>
-                  <TabsTrigger value="ratings">Ratings</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </CardContent>
-          </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>

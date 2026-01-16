@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DollarSign,
   TrendingUp,
@@ -19,6 +19,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   Clock,
+  Settings,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
@@ -130,8 +131,23 @@ export default function InvestorDashboard() {
               <h1 className='text-2xl font-bold'>Investor Dashboard</h1>
             </div>
             <div className='flex items-center gap-4'>
-              <span className='text-sm text-muted-foreground'>{user?.name || 'Investor'}</span>
-              <Button variant='ghost' size='sm' asChild>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/dashboard/investor/profile">
+                  <Avatar className="h-6 w-6 sm:h-7 sm:w-7 mr-2 bg-green-500/20">
+                    <AvatarFallback className="text-xs bg-green-500 text-white">
+                      {user?.name?.charAt(0) || 'I'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:inline">Profile</span>
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/dashboard/investor/settings">
+                  <Settings className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Settings</span>
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
                 <Link href='/'>Back to Home</Link>
               </Button>
             </div>
@@ -363,6 +379,54 @@ export default function InvestorDashboard() {
               </div>
             </div>
           )}
+
+          {/* Explore Marketplaces Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Explore Marketplaces</CardTitle>
+              <CardDescription>Access projects, jobs, suppliers, and needs</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4'>
+                <Button variant='outline' className='h-auto flex-col gap-2 py-3 sm:py-4' asChild>
+                  <Link href='/marketplace'>
+                    <TrendingUp className='h-5 w-5 sm:h-6 sm:w-6' />
+                    <div className='text-center'>
+                      <div className='font-semibold text-xs sm:text-sm'>Investment</div>
+                      <div className='text-xs text-muted-foreground hidden sm:block'>Browse projects</div>
+                    </div>
+                  </Link>
+                </Button>
+                <Button variant='outline' className='h-auto flex-col gap-2 py-3 sm:py-4' asChild>
+                  <Link href='/jobs'>
+                    <Target className='h-5 w-5 sm:h-6 sm:w-6' />
+                    <div className='text-center'>
+                      <div className='font-semibold text-xs sm:text-sm'>Jobs</div>
+                      <div className='text-xs text-muted-foreground hidden sm:block'>Find opportunities</div>
+                    </div>
+                  </Link>
+                </Button>
+                <Button variant='outline' className='h-auto flex-col gap-2 py-3 sm:py-4' asChild>
+                  <Link href='/needs'>
+                    <FileText className='h-5 w-5 sm:h-6 sm:w-6' />
+                    <div className='text-center'>
+                      <div className='font-semibold text-xs sm:text-sm'>Needs</div>
+                      <div className='text-xs text-muted-foreground hidden sm:block'>Project requests</div>
+                    </div>
+                  </Link>
+                </Button>
+                <Button variant='outline' className='h-auto flex-col gap-2 py-3 sm:py-4' asChild>
+                  <Link href='/suppliers'>
+                    <Users className='h-5 w-5 sm:h-6 sm:w-6' />
+                    <div className='text-center'>
+                      <div className='font-semibold text-xs sm:text-sm'>Suppliers</div>
+                      <div className='text-xs text-muted-foreground hidden sm:block'>Find services</div>
+                    </div>
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardContent className='p-6'>

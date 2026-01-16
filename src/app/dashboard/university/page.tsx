@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
@@ -15,6 +15,8 @@ import {
   Calendar,
   Shield,
   Star,
+  Plus,
+  Target,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
@@ -252,6 +254,53 @@ export default function UniversityDashboard() {
                       <Link href="/dashboard/university/settings">
                         <Calendar className="h-4 w-4 mr-2" />
                         Settings
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Explore Marketplaces</CardTitle>
+                  <CardDescription>Access projects, jobs, suppliers, and opportunities</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
+                    <Button variant="outline" className="h-auto flex-col gap-2 py-3 sm:py-4" asChild>
+                      <Link href="/marketplace">
+                        <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <div className="text-center">
+                          <div className="font-semibold text-xs sm:text-sm">Investment</div>
+                          <div className="text-xs text-muted-foreground hidden sm:block">Browse projects</div>
+                        </div>
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="h-auto flex-col gap-2 py-3 sm:py-4" asChild>
+                      <Link href="/jobs">
+                        <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <div className="text-center">
+                          <div className="font-semibold text-xs sm:text-sm">Jobs</div>
+                          <div className="text-xs text-muted-foreground hidden sm:block">Career opportunities</div>
+                        </div>
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="h-auto flex-col gap-2 py-3 sm:py-4" asChild>
+                      <Link href="/needs">
+                        <Target className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <div className="text-center">
+                          <div className="font-semibold text-xs sm:text-sm">Needs</div>
+                          <div className="text-xs text-muted-foreground hidden sm:block">Project requests</div>
+                        </div>
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="h-auto flex-col gap-2 py-3 sm:py-4" asChild>
+                      <Link href="/suppliers">
+                        <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <div className="text-center">
+                          <div className="font-semibold text-xs sm:text-sm">Suppliers</div>
+                          <div className="text-xs text-muted-foreground hidden sm:block">Find services</div>
+                        </div>
                       </Link>
                     </Button>
                   </div>

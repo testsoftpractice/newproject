@@ -548,6 +548,114 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Marketplace Showcase */}
+      <section className="py-20 bg-muted/50">
+        <div className="container mx-auto px-4">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
+              Explore Our Marketplaces
+            </h2>
+            <p className="mx-auto max-w-2xl text-lg text-muted-foreground md:text-xl">
+              Connect, collaborate, and grow through our integrated ecosystem of marketplaces
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                    <TrendingUp className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle>Investment Marketplace</CardTitle>
+                </div>
+                <CardDescription>Student-led ventures seeking funding</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Discover early-stage projects with proven execution records and transparent governance. 
+                  Invest in teams with verified track records.
+                </p>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/marketplace">
+                    Browse Projects <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
+                    <Briefcase className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <CardTitle>Jobs Market</CardTitle>
+                </div>
+                <CardDescription>Connect with top talent and opportunities</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Find full-time, part-time, or internship opportunities. Employers can post jobs 
+                  and discover candidates with verified experience.
+                </p>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/jobs">
+                    Explore Jobs <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-500/10">
+                    <Target className="h-6 w-6 text-green-500" />
+                  </div>
+                  <CardTitle>Project Needs</CardTitle>
+                </div>
+                <CardDescription>Find projects that need your skills</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Browse project requirements and offer your expertise. Find opportunities to 
+                  collaborate on real projects with tangible impact.
+                </p>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/needs">
+                    View Needs <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/10">
+                    <Users className="h-6 w-6 text-purple-500" />
+                  </div>
+                  <CardTitle>Suppliers</CardTitle>
+                </div>
+                <CardDescription>Services and solutions for your projects</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Access a curated marketplace of suppliers and service providers. 
+                  Find expertise in technology, design, marketing, and more.
+                </p>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/suppliers">
+                    Find Suppliers <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t bg-muted py-8">
         <div className="container mx-auto px-4">

@@ -1,38 +1,37 @@
-import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+// Mock notification storage (in production, use database)
+const notificationsStore = new Map<string, any[]>()
+
+export async function GET(request: NextRequest) {
   try {
-    const userId = request.nextUrl.searchParams.get("userId")
-    
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
+
     if (!userId) {
-      return NextResponse.json({ success: false, error: "User ID is required" }, { status: 400 })
+      return NextResponse.json(
+        { success: false, error: 'User ID is required' },
+        { status: 400 }
+      )
     }
 
-    const notifications = await db.notification.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    })
+    // Get notifications for user
+    const notifications = notificationsStore.get(userId) || []
+
+    // Filter unread count
+    const unreadCount = notifications.filter((n) => !n.read).length
 
     return NextResponse.json({
       success: true,
-      data: {
-        notifications: notifications.map(n => ({
-          id: n.id,
-          type: n.type,
-          title: n.title,
-          message: n.message,
-          link: n.link || "",
-          read: n.read,
-          createdAt: n.createdAt.toISOString(),
-        })),
-        totalCount: notifications.length,
-      },
+      data: notifications,
+      unreadCount,
     })
-  } catch (error: any) {
-    console.error("Get notifications error:", error)
-    return NextResponse.json({ success: false, error: "Failed to fetch notifications" }, { status: 500 })
+  } catch (error) {
+    console.error('Error fetching notifications:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch notifications' },
+      { status: 500 }
+    )
   }
 }
 
@@ -41,88 +40,44 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { userId, type, title, message, link } = body
 
-    if (!userId) {
-      return NextResponse.json({ success: false, error: "User ID is required" }, { status: 400 })
+    if (!userId || !type || !title || !message) {
+      return NextResponse.json(
+        { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      )
     }
 
-    const notification = await db.notification.create({
-      data: { userId, type, title, message, link, read: false },
-    })
+    // Create notification
+    const notification = {
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      userId,
+      type,
+      title,
+      message,
+      link: link || null,
+      timestamp: new Date().toISOString(),
+      read: false,
+    }
+
+    // Store notification
+    const userNotifications = notificationsStore.get(userId) || []
+    userNotifications.unshift(notification)
+    notificationsStore.set(userId, userNotifications)
+
+    // Send real-time notification via Socket.IO if available
+    if ((global as any).socketIO?.sendNotificationToUser) {
+      ;(global as any).socketIO.sendNotificationToUser(userId, notification)
+    }
 
     return NextResponse.json({
       success: true,
       data: notification,
     })
-  } catch (error: any) {
-    console.error("Create notification error:", error)
-    return NextResponse.json({ success: false, error: "Failed to create notification" }, { status: 500 })
-  }
-}
-
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const notificationId = params.id
-    const body = await request.json()
-    const updates: any = {}
-
-    if (body.read !== undefined) updates.read = body.read
-
-    const notification = await db.notification.update({
-      where: { id: notificationId },
-      data: updates,
-    })
-
-    return NextResponse.json({
-      success: true,
-      data: notification,
-    })
-  } catch (error: any) {
-    console.error("Update notification error:", error)
-    return NextResponse.json({ success: false, error: "Failed to update notification" }, { status: 500 })
-  }
-}
-
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const notificationId = params.id
-
-    await db.notification.delete({
-      where: { id: notificationId },
-    })
-
-    return NextResponse.json({
-      success: true,
-      message: "Notification deleted successfully",
-    })
-  } catch (error: any) {
-    console.error("Delete notification error:", error)
-    return NextResponse.json({ success: false, error: "Failed to delete notification" }, { status: 500 })
-  }
-}
-
-export async function PATCH_MARK_ALL_READ(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { userId } = body
-
-    if (!userId) {
-      return NextResponse.json({ success: false, error: "User ID is required" }, { status: 400 })
-    }
-
-    const result = await db.notification.updateMany({
-      where: { userId, read: false },
-      data: { read: true },
-    })
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        markedAsRead: result.count,
-        message: result.count + " notifications marked as read",
-      },
-    })
-  } catch (error: any) {
-    console.error("Mark all notifications read error:", error)
-    return NextResponse.json({ success: false, error: "Failed to mark notifications as read" }, { status: 500 })
+  } catch (error) {
+    console.error('Error creating notification:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to create notification' },
+      { status: 500 }
+    )
   }
 }

@@ -40,8 +40,10 @@ import {
   ChevronRight,
   Star,
   Shield,
+  MessageSquare,
 } from 'lucide-react'
 import Link from 'next/link'
+import TeamChat from '@/components/team-chat'
 
 export default function ProjectDetailPage({ params }: { params: { id: string } }) {
   const [activeTab, setActiveTab] = useState('overview')
@@ -268,12 +270,13 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-4xl grid-cols-5">
+          <TabsList className="grid w-full max-w-4xl grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="team">Team</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
             <TabsTrigger value="milestones">Milestones</TabsTrigger>
+            <TabsTrigger value="chat">Chat</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -578,6 +581,17 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          </TabsContent>
+
+          {/* Chat Tab */}
+          <TabsContent value="chat" className="space-y-6">
+            <div className="h-[600px]">
+              <TeamChat
+                roomId={params.id}
+                userId="user-mock"
+                userName="Current User"
+              />
             </div>
           </TabsContent>
         </Tabs>
