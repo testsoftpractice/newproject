@@ -117,11 +117,38 @@ export function getAllActiveFeatures(): FeatureModule[] {
 }
 
 export function getAllFeaturesByPhase(): Record<number, FeatureModule[]> {
-  return Object.entries(FEATURE_FLAGS)
-    .reduce((acc, [phase, flags]) => {
-      acc[phase] = [...flags]
-      return acc
-    }, {} as Record<number, FeatureModule[]>
+  const phases: Record<number, FeatureModule[]> = {
+    1: [
+      FeatureModule.STUDENT_ENHANCEMENTS,
+      FeatureModule.TASK_MANAGEMENT,
+      FeatureModule.PROJECT_ROLES,
+    ],
+    2: [
+      FeatureModule.UNIVERSITY_DASHBOARD,
+      FeatureModule.STUDENT_TAGGING,
+      FeatureModule.GOVERNANCE_APPROVAL,
+    ],
+    3: [
+      FeatureModule.INVESTMENT_MARKETPLACE,
+      FeatureModule.PROPOSAL_SYSTEM,
+      FeatureModule.DEAL_FLOW,
+    ],
+    4: [
+      FeatureModule.SUPPLIER_MARKETPLACE,
+      FeatureModule.NEED_BOARD,
+    ],
+    5: [
+      FeatureModule.CANDIDATE_MARKETPLACE,
+      FeatureModule.EMPLOYER_VERIFICATION,
+      FeatureModule.JOB_POSTING,
+    ],
+    6: [
+      FeatureModule.AUDIT_LOGGING,
+      FeatureModule.ADVANCED_ANALYTICS,
+      FeatureModule.DISPUTE_RESOLUTION,
+    ],
+  }
+  return phases
 }
 
 export function getEnabledFeaturesForUser(userRole: string): FeatureModule[] {
@@ -158,7 +185,7 @@ export function setFeatureEnabled(flag: FeatureModule, enabled: boolean): void {
 /**
  * All Feature Flags
  */
-export const FEATURE_FLAGS: Record<FeatureModule, FeatureFlagConfig> = {
+export const FEATURE_FLAGS: Record<FeatureModule, FeatureConfig> = {
   // Phase 1: Student Enhancements (Ready for use)
   STUDENT_ENHANCEMENTS: {
     enabled: true,
@@ -287,17 +314,3 @@ export const ALL_FEATURES = [
   ADVANCED_ANALYTICS,
   DISPUTE_RESOLUTION,
 ] as FeatureModule[]
-
-export default { STUDENT_ENHANCEMENTS as FeatureModule }
-
-// For easy access to all flags
-export default { ...ALL_FEATURES }
-
-export * from '@/lib/features/flags-v2' as Phase 2 flags
-import { STUDENT_ENHANCEMENTS } from '@/lib/features/flags'
-import { TASK_MANAGEMENT } from '@/lib/features/flags'
-import { PROJECT_ROLES } from '@/lib/features/flags'
-import { UNIVERSITY_DASHBOARD } from '@/lib/features/flags'
-import { STUDENT_TAGGING } from '@//lib/features/flags'
-import { GOVERNANCE_APPROVAL } from '@/lib/features/flags'
-import { UNIVERSITY_DASHBOARD } from '@/lib/features/flags-v2'

@@ -34,31 +34,45 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  // Load auth state from localStorage on mount
+  // Load auth state from localStorage on mount - prevent SSR access
   useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    const storedToken = localStorage.getItem('token')
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser))
-      setToken(storedToken)
+    try {
+      const storedUser = localStorage.getItem('user')
+      const storedToken = localStorage.getItem('token')
+      if (storedUser && storedToken) {
+        setUser(JSON.parse(storedUser))
+        setToken(storedToken)
+      }
+    } catch (error) {
+      console.error('Error loading auth state:', error)
+    } finally {
+      setLoading(false)
     }
   }, [])
 
   const login = (userData: User, authToken: string) => {
     setUser(userData)
     setToken(authToken)
-    localStorage.setItem('user', JSON.stringify(userData))
-    localStorage.setItem('token', authToken)
+    try {
+      localStorage.setItem('user', JSON.stringify(userData))
+      localStorage.setItem('token', authToken)
+    } catch (error) {
+      console.error('Error saving auth state:', error)
+    }
   }
 
   const logout = () => {
     setUser(null)
     setToken(null)
-    localStorage.removeItem('user')
-    localStorage.removeItem('token')
+    try {
+      localStorage.removeItem('user')
+      localStorage.removeItem('token')
+    } catch (error) {
+      console.error('Error clearing auth state:', error)
+    }
     router.push('/auth')
   }
 

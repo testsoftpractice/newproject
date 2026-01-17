@@ -10,83 +10,56 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    // Mock supplier data (in production, fetch from database)
-    const mockSuppliers = [
-      {
-        id: 'supplier-1',
-        name: 'Tech Solutions Inc.',
-        category: 'Technology',
-        description: 'Software development and cloud infrastructure services',
-        rating: 4.5,
-        projectsCompleted: 25,
-        hourlyRate: 150,
-        verified: true,
-      },
-      {
-        id: 'supplier-2',
-        name: 'Design Studio Pro',
-        category: 'Design',
-        description: 'UI/UX design and branding services',
-        rating: 4.8,
-        projectsCompleted: 40,
-        hourlyRate: 100,
-        verified: true,
-      },
-      {
-        id: 'supplier-3',
-        name: 'Marketing Experts',
-        category: 'Marketing',
-        description: 'Digital marketing and growth strategies',
-        rating: 4.3,
-        projectsCompleted: 18,
-        hourlyRate: 120,
-        verified: false,
-      },
-      {
-        id: 'supplier-4',
-        name: 'Data Analytics Hub',
-        category: 'Data & Analytics',
-        description: 'Business intelligence and data visualization',
-        rating: 4.7,
-        projectsCompleted: 32,
-        hourlyRate: 175,
-        verified: true,
-      },
-      {
-        id: 'supplier-5',
-        name: 'Content Creators',
-        category: 'Content',
-        description: 'Content writing and creative services',
-        rating: 4.4,
-        projectsCompleted: 22,
-        hourlyRate: 80,
-        verified: true,
-      },
-    ]
-
-    let filteredSuppliers = mockSuppliers
-
-    if (search) {
-      filteredSuppliers = filteredSuppliers.filter((s) =>
-        s.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.description.toLowerCase().includes(search.toLowerCase())
-      )
-    }
+    const where: any = {}
 
     if (category && category !== 'all') {
-      filteredSuppliers = filteredSuppliers.filter((s) => s.category === category)
+      where.category = category
     }
 
-    const startIndex = (page - 1) * limit
-    const paginatedSuppliers = filteredSuppliers.slice(startIndex, startIndex + limit)
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    const [suppliers, totalCount] = await Promise.all([
+      db.supplier.findMany({
+        where,
+        take: limit,
+        skip: (page - 1) * limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      db.supplier.count({ where }),
+    ])
 
     return NextResponse.json({
       success: true,
       data: {
-        suppliers: paginatedSuppliers,
-        totalCount: filteredSuppliers.length,
+        suppliers: suppliers.map(s => ({
+          id: s.id,
+          name: s.name,
+          description: s.description,
+          category: s.category,
+          contactEmail: s.contactEmail,
+          contactPhone: s.contactPhone,
+          location: s.location,
+          website: s.website,
+          hourlyRate: s.hourlyRate,
+          rating: s.rating,
+          projectsCompleted: s.projectsCompleted,
+          verified: s.verified,
+          skills: s.skills ? JSON.parse(s.skills) : [],
+          services: s.services ? JSON.parse(s.services) : [],
+          certifications: s.certifications ? JSON.parse(s.certifications) : [],
+          portfolioLinks: s.portfolioLinks ? JSON.parse(s.portfolioLinks) : [],
+          companySize: s.companySize,
+          yearsInBusiness: s.yearsInBusiness,
+          createdAt: s.createdAt.toISOString(),
+        })),
+        totalCount,
         currentPage: page,
-        totalPages: Math.ceil(filteredSuppliers.length / limit),
+        totalPages: Math.ceil(totalCount / limit),
       },
     })
   } catch (error: any) {
@@ -102,35 +75,83 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, category, description, hourlyRate, skills } = body
+    const {
+      name,
+      businessName,
+      description,
+      category,
+      subCategories,
+      expertise,
+      hourlyRate,
+      location,
+      website,
+      contactEmail,
+      contactPhone,
+      companySize,
+      yearsInBusiness,
+      portfolioLinks,
+      services,
+      certifications,
+      userId,
+    } = body
+
+    // Use businessName as name if provided, otherwise use name
+    const supplierName = businessName || name
 
     // Validate input
-    if (!name || !category || !description) {
+    if (!supplierName || !category || !description) {
       return NextResponse.json(
         { success: false, error: 'Name, category, and description are required' },
         { status: 400 }
       )
     }
 
-    // Create supplier (mock - in production, save to database)
-    const supplier = {
-      id: `supplier-${Date.now()}`,
-      name,
-      category,
-      description,
-      hourlyRate: hourlyRate ? parseFloat(hourlyRate) : null,
-      skills: skills || [],
-      rating: 0,
-      projectsCompleted: 0,
-      verified: false,
-      createdAt: new Date(),
+    if (!contactEmail) {
+      return NextResponse.json(
+        { success: false, error: 'Contact email is required' },
+        { status: 400 }
+      )
     }
+
+    // Create supplier
+    const supplier = await db.supplier.create({
+      data: {
+        name: supplierName,
+        description,
+        category,
+        contactEmail,
+        contactPhone: contactPhone || null,
+        location: location || null,
+        website: website || null,
+        hourlyRate: hourlyRate ? parseFloat(hourlyRate) : null,
+        skills: expertise && expertise.length > 0 ? JSON.stringify(expertise) : null,
+        services: services && services.length > 0 ? JSON.stringify(services) : null,
+        certifications: certifications && certifications.length > 0 ? JSON.stringify(certifications) : null,
+        portfolioLinks: portfolioLinks && portfolioLinks.length > 0 ? JSON.stringify(portfolioLinks) : null,
+        companySize: companySize || null,
+        yearsInBusiness: yearsInBusiness || null,
+        userId: userId || null,
+        rating: 0,
+        projectsCompleted: 0,
+        verified: false,
+      },
+    })
 
     return NextResponse.json(
       {
         success: true,
         message: 'Supplier profile created successfully',
-        data: supplier,
+        data: {
+          id: supplier.id,
+          name: supplier.name,
+          description: supplier.description,
+          category: supplier.category,
+          contactEmail: supplier.contactEmail,
+          rating: supplier.rating,
+          projectsCompleted: supplier.projectsCompleted,
+          verified: supplier.verified,
+          createdAt: supplier.createdAt.toISOString(),
+        },
       },
       { status: 201 }
     )

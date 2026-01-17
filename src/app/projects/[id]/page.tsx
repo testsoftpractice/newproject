@@ -1,172 +1,150 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Progress } from '@/components/ui/progress'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
   Briefcase,
   Users,
   Calendar,
   Target,
   Plus,
+  UserPlus,
   Settings,
   CheckCircle2,
   Clock,
   AlertCircle,
-  UserPlus,
-  Filter,
-  Search,
-  ChevronRight,
   Star,
   Shield,
-  MessageSquare,
+  ArrowLeft,
+  Loader2,
 } from 'lucide-react'
 import Link from 'next/link'
-import TeamChat from '@/components/team-chat'
+
+interface ProjectData {
+  id: string
+  title: string
+  description: string
+  category: string
+  status: string
+  projectLead: any
+  hrLead: any
+  university: any
+  members: any[]
+  departments: any[]
+  tasks: any[]
+  milestones: any[]
+  investments: any[]
+  agreements: any[]
+  completionRate: number
+  teamSize: number
+  seekingInvestment: boolean
+  investmentGoal: number | null
+  investmentRaised: number | null
+  startDate: string | null
+  endDate: string | null
+  approvalDate: string | null
+  createdAt: string
+  updatedAt: string
+}
 
 export default function ProjectDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('overview')
-  const [showAddMember, setShowAddMember] = useState(false)
-  const [showCreateTask, setShowCreateTask] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [project, setProject] = useState<ProjectData | null>(null)
 
-  // Mock data for demonstration
-  const project = {
-    id: params.id,
-    title: 'University News Channel',
-    description: 'A student-led news platform covering campus events, achievements, and stories',
-    category: 'News & Media',
-    status: 'Active',
-    completionRate: 68,
-    startDate: '2024-01-15',
-    seekingInvestment: false,
+  useEffect(() => {
+    fetchProject()
+  }, [params.id])
+
+  const fetchProject = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/projects/${params.id}`)
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          setError('Project not found')
+        } else {
+          setError('Failed to load project')
+        }
+        return
+      }
+
+      const data = await response.json()
+      setProject(data.project)
+    } catch (err) {
+      console.error('Fetch project error:', err)
+      setError('An error occurred while loading the project')
+    } finally {
+      setLoading(false)
+    }
   }
-
-  const projectLead = {
-    name: 'Sarah Johnson',
-    avatar: '',
-    email: 'sarah@mit.edu',
-  }
-
-  const hrLead = {
-    name: 'Michael Chen',
-    avatar: '',
-    email: 'michael@mit.edu',
-  }
-
-  const departments = [
-    {
-      id: 1,
-      name: 'Editorial',
-      head: 'Emily Davis',
-      members: 4,
-      tasks: 12,
-    },
-    {
-      id: 2,
-      name: 'Media Production',
-      head: 'James Wilson',
-      members: 3,
-      tasks: 8,
-    },
-    {
-      id: 3,
-      name: 'Marketing',
-      head: 'Lisa Anderson',
-      members: 3,
-      tasks: 6,
-    },
-    {
-      id: 4,
-      name: 'Design',
-      head: 'David Brown',
-      members: 2,
-      tasks: 4,
-    },
-  ]
-
-  const teamMembers = [
-    { id: 1, name: 'Emily Davis', role: 'Department Head', department: 'Editorial', avatar: '', status: 'Active' },
-    { id: 2, name: 'James Wilson', role: 'Department Head', department: 'Media Production', avatar: '', status: 'Active' },
-    { id: 3, name: 'Lisa Anderson', role: 'Department Head', department: 'Marketing', avatar: '', status: 'Active' },
-    { id: 4, name: 'David Brown', role: 'Department Head', department: 'Design', avatar: '', status: 'Active' },
-    { id: 5, name: 'Jennifer Lee', role: 'Team Lead', department: 'Editorial', avatar: '', status: 'Active' },
-    { id: 6, name: 'Robert Taylor', role: 'Senior Contributor', department: 'Media Production', avatar: '', status: 'Active' },
-    { id: 7, name: 'Amanda White', role: 'Contributor', department: 'Editorial', avatar: '', status: 'Active' },
-    { id: 8, name: 'Christopher Martinez', role: 'Contributor', department: 'Marketing', avatar: '', status: 'Active' },
-    { id: 9, name: 'Sarah Johnson', role: 'Project Lead', department: '-', avatar: '', status: 'Active' },
-    { id: 10, name: 'Michael Chen', role: 'HR Lead', department: '-', avatar: '', status: 'Active' },
-    { id: 11, name: 'Daniel Garcia', role: 'Contributor', department: 'Design', avatar: '', status: 'Active' },
-    { id: 12, name: 'Michelle Kim', role: 'Contributor', department: 'Media Production', avatar: '', status: 'Active' },
-  ]
-
-  const tasks = [
-    { id: 1, title: 'Write weekly newsletter', assignee: 'Emily Davis', department: 'Editorial', status: 'In Progress', priority: 'High', dueDate: '2024-12-20' },
-    { id: 2, title: 'Edit video content', assignee: 'Robert Taylor', department: 'Media Production', status: 'In Progress', priority: 'High', dueDate: '2024-12-18' },
-    { id: 3, title: 'Design social media graphics', assignee: 'Daniel Garcia', department: 'Design', status: 'Pending', priority: 'Medium', dueDate: '2024-12-22' },
-    { id: 4, title: 'Schedule social posts', assignee: 'Christopher Martinez', department: 'Marketing', status: 'In Progress', priority: 'Medium', dueDate: '2024-12-21' },
-    { id: 5, title: 'Review article submissions', assignee: 'Jennifer Lee', department: 'Editorial', status: 'Pending', priority: 'High', dueDate: '2024-12-19' },
-    { id: 6, title: 'Film campus event', assignee: 'Michelle Kim', department: 'Media Production', status: 'In Progress', priority: 'Urgent', dueDate: '2024-12-17' },
-    { id: 7, title: 'Create promotional video', assignee: 'James Wilson', department: 'Media Production', status: 'Pending', priority: 'High', dueDate: '2024-12-25' },
-    { id: 8, title: 'Update website content', assignee: 'Amanda White', department: 'Editorial', status: 'Completed', priority: 'Medium', dueDate: '2024-12-15' },
-  ]
-
-  const milestones = [
-    { id: 1, title: 'Launch Beta Version', status: 'Completed', targetDate: '2024-03-01', achievedAt: '2024-02-28' },
-    { id: 2, title: 'Reach 50% Completion', status: 'Completed', targetDate: '2024-06-01', achievedAt: '2024-05-15' },
-    { id: 3, title: 'Launch Full Platform', status: 'In Progress', targetDate: '2024-12-31', achievedAt: null },
-    { id: 4, title: '100 Articles Published', status: 'In Progress', targetDate: '2024-12-20', achievedAt: null },
-  ]
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'Urgent': return 'bg-red-500/10 text-red-500 border-red-500/20'
-      case 'High': return 'bg-orange-500/10 text-orange-500 border-orange-500/20'
-      case 'Medium': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
-      case 'Low': return 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+      case 'URGENT': return 'bg-red-500/10 text-red-500 border-red-500/20'
+      case 'HIGH': return 'bg-orange-500/10 text-orange-500 border-orange-500/20'
+      case 'MEDIUM': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+      case 'LOW': return 'bg-blue-500/10 text-blue-500 border-blue-500/20'
       default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20'
     }
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Completed': return <CheckCircle2 className="h-4 w-4 text-green-500" />
-      case 'In Progress': return <Clock className="h-4 w-4 text-yellow-500" />
-      case 'Pending': return <AlertCircle className="h-4 w-4 text-blue-500" />
+      case 'COMPLETED': return <CheckCircle2 className="h-4 w-4 text-green-500" />
+      case 'IN_PROGRESS': return <Clock className="h-4 w-4 text-yellow-500" />
+      case 'PENDING': return <AlertCircle className="h-4 w-4 text-blue-500" />
+      case 'ASSIGNED': return <Clock className="h-4 w-4 text-yellow-500" />
       default: return <AlertCircle className="h-4 w-4 text-gray-500" />
     }
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading project...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !project) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">{error || 'Project not found'}</p>
+            <Button onClick={() => router.back()}>Go Back</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="border-b bg-background">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/dashboard/student" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-                <Briefcase className="h-5 w-5" />
-                <span className="font-semibold">Back to Dashboard</span>
+              <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="h-5 w-5" />
+                <span className="font-semibold">Back</span>
               </Link>
               <div className="h-6 w-px bg-border" />
               <div>
@@ -175,7 +153,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant={project.status === 'Active' ? 'default' : 'secondary'}>
+              <Badge variant={project.status === 'ACTIVE' ? 'default' : 'secondary'}>
                 {project.status}
               </Badge>
               <Button variant="outline" size="sm">
@@ -187,7 +165,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-8">
         {/* Project Overview Cards */}
         <div className="grid gap-6 mb-8 md:grid-cols-4">
           <Card>
@@ -196,7 +174,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{project.completionRate}%</div>
+              <div className="text-2xl font-bold">{project.completionRate.toFixed(0)}%</div>
               <Progress value={project.completionRate} className="mt-2 h-2" />
             </CardContent>
           </Card>
@@ -207,8 +185,8 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{teamMembers.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">4 departments</p>
+              <div className="text-2xl font-bold">{project.teamSize}</div>
+              <p className="text-xs text-muted-foreground mt-1">{project.departments.length} departments</p>
             </CardContent>
           </Card>
 
@@ -218,8 +196,8 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{tasks.filter(t => t.status !== 'Completed').length}</div>
-              <p className="text-xs text-muted-foreground mt-1">{tasks.length} total tasks</p>
+              <div className="text-2xl font-bold">{project.tasks.filter(t => t.status !== 'COMPLETED').length}</div>
+              <p className="text-xs text-muted-foreground mt-1">{project.tasks.length} total tasks</p>
             </CardContent>
           </Card>
 
@@ -229,8 +207,8 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               <Star className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{milestones.filter(m => m.status === 'Completed').length}</div>
-              <p className="text-xs text-muted-foreground mt-1">{milestones.length} total milestones</p>
+              <div className="text-2xl font-bold">{project.milestones.filter(m => m.status === 'ACHIEVED').length}</div>
+              <p className="text-xs text-muted-foreground mt-1">{project.milestones.length} total milestones</p>
             </CardContent>
           </Card>
         </div>
@@ -247,22 +225,24 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             <div className="grid gap-6 md:grid-cols-2">
               <div className="flex items-start gap-4">
                 <Avatar className="h-12 w-12">
-                  <AvatarFallback>SJ</AvatarFallback>
+                  <AvatarImage src={project.projectLead?.avatar} />
+                  <AvatarFallback>{project.projectLead?.name?.split(' ').map((n: string) => n[0]).join('') || 'PL'}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-medium">{projectLead.name}</div>
+                  <div className="font-medium">{project.projectLead?.name || 'Not assigned'}</div>
                   <div className="text-sm text-muted-foreground">Project Lead</div>
-                  <div className="text-xs text-muted-foreground mt-1">{projectLead.email}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{project.projectLead?.email || ''}</div>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <Avatar className="h-12 w-12">
-                  <AvatarFallback>MC</AvatarFallback>
+                  <AvatarImage src={project.hrLead?.avatar} />
+                  <AvatarFallback>{project.hrLead?.name?.split(' ').map((n: string) => n[0]).join('') || 'HR'}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-medium">{hrLead.name}</div>
+                  <div className="font-medium">{project.hrLead?.name || 'Not assigned'}</div>
                   <div className="text-sm text-muted-foreground">HR Lead</div>
-                  <div className="text-xs text-muted-foreground mt-1">{hrLead.email}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{project.hrLead?.email || ''}</div>
                 </div>
               </div>
             </div>
@@ -270,13 +250,12 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-4xl grid-cols-6">
+          <TabsList className="grid w-full max-w-4xl grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="team">Team</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
             <TabsTrigger value="milestones">Milestones</TabsTrigger>
-            <TabsTrigger value="chat">Chat</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -293,19 +272,32 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Start Date</div>
-                    <div className="font-medium">{new Date(project.startDate).toLocaleDateString()}</div>
+                    <div className="font-medium">{project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not set'}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">End Date</div>
+                    <div className="font-medium">{project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Not set'}</div>
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Status</div>
-                    <Badge variant={project.status === 'Active' ? 'default' : 'secondary'}>
+                    <Badge variant={project.status === 'ACTIVE' ? 'default' : 'secondary'}>
                       {project.status}
                     </Badge>
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Completion</div>
                     <Progress value={project.completionRate} className="mt-2 h-2" />
-                    <div className="text-sm font-medium mt-1">{project.completionRate}%</div>
+                    <div className="text-sm font-medium mt-1">{project.completionRate.toFixed(0)}%</div>
                   </div>
+                  {project.seekingInvestment && (
+                    <div>
+                      <div className="text-sm text-muted-foreground">Investment</div>
+                      <div className="font-medium">
+                        ${project.investmentRaised?.toLocaleString() || 0} raised of ${project.investmentGoal?.toLocaleString() || 0}
+                      </div>
+                      <Progress value={project.investmentGoal ? ((project.investmentRaised || 0) / project.investmentGoal * 100) : 0} className="mt-2 h-2" />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -314,11 +306,11 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full" onClick={() => setShowCreateTask(true)}>
+                  <Button className="w-full">
                     <Plus className="mr-2 h-4 w-4" />
                     Create New Task
                   </Button>
-                  <Button className="w-full" variant="outline" onClick={() => setShowAddMember(true)}>
+                  <Button className="w-full" variant="outline">
                     <UserPlus className="mr-2 h-4 w-4" />
                     Add Team Member
                   </Button>
@@ -336,263 +328,187 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
                 <CardDescription>Track key project achievements</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {milestones.map((milestone) => (
-                  <div key={milestone.id} className="flex items-center gap-4 p-3 rounded-lg border">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                      milestone.status === 'Completed' ? 'bg-green-500 text-white' : 'bg-muted'
-                    }`}>
-                      {milestone.status === 'Completed' ? (
-                        <CheckCircle2 className="h-5 w-5" />
-                      ) : (
-                        <Clock className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium">{milestone.title}</div>
-                      <div className="text-sm text-muted-foreground">
-                        Target: {new Date(milestone.targetDate).toLocaleDateString()}
-                        {milestone.achievedAt && ` • Achieved: ${new Date(milestone.achievedAt).toLocaleDateString()}`}
-                      </div>
-                    </div>
-                    <Badge variant={milestone.status === 'Completed' ? 'default' : 'secondary'}>
-                      {milestone.status}
-                    </Badge>
+                {project.milestones.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No milestones yet
                   </div>
-                ))}
+                ) : (
+                  project.milestones.map((milestone) => (
+                    <div key={milestone.id} className="flex items-center gap-4 p-3 rounded-lg border">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                        milestone.status === 'ACHIEVED' ? 'bg-green-500 text-white' : 'bg-muted'
+                      }`}>
+                        {milestone.status === 'ACHIEVED' ? (
+                          <CheckCircle2 className="h-5 w-5" />
+                        ) : milestone.status === 'IN_PROGRESS' ? (
+                          <Clock className="h-5 w-5 text-muted-foreground" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">{milestone.title}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Target: {new Date(milestone.targetDate).toLocaleDateString()}
+                          {milestone.achievedAt && ` • Achieved: ${new Date(milestone.achievedAt).toLocaleDateString()}`}
+                        </div>
+                      </div>
+                      <Badge variant={milestone.status === 'ACHIEVED' ? 'default' : 'secondary'}>
+                        {milestone.status}
+                      </Badge>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Team Tab */}
           <TabsContent value="team" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Team Members</h2>
-                <p className="text-muted-foreground">Manage your project team</p>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filter
-                </Button>
-                <Button onClick={() => setShowAddMember(true)}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Add Member
-                </Button>
-              </div>
-            </div>
-
             <Card>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Member</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {teamMembers.map((member) => (
-                      <TableRow key={member.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar>
-                              <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium">{member.name}</div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{member.role}</Badge>
-                        </TableCell>
-                        <TableCell>{member.department}</TableCell>
-                        <TableCell>
-                          <Badge variant={member.status === 'Active' ? 'default' : 'secondary'}>
-                            {member.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">
-                            View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+              <CardHeader>
+                <CardTitle>Team Members</CardTitle>
+                <CardDescription>{project.members.length} members across {project.departments.length} departments</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {project.members.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No team members yet
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {project.members.map((member) => (
+                      <div key={member.id} className="flex items-center gap-4 p-4 rounded-lg border">
+                        <Avatar>
+                          <AvatarImage src={member.user?.avatar} />
+                          <AvatarFallback>{member.user?.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="font-medium">{member.user?.name}</div>
+                          <div className="text-sm text-muted-foreground">{member.role}</div>
+                        </div>
+                        <Badge>{member.user?.progressionLevel || 'CONTRIBUTOR'}</Badge>
+                      </div>
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Tasks Tab */}
           <TabsContent value="tasks" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Project Tasks</h2>
-                <p className="text-muted-foreground">Track and manage all project tasks</p>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline">
-                  <Search className="mr-2 h-4 w-4" />
-                  Search
-                </Button>
-                <Button variant="outline">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filter
-                </Button>
-                <Button onClick={() => setShowCreateTask(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Task
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid gap-4">
-              {tasks.map((task) => (
-                <Card key={task.id} className="hover:border-primary/50 transition-colors">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      <div className="mt-1">
-                        {getStatusIcon(task.status)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <h3 className="font-medium">{task.title}</h3>
-                            <div className="text-sm text-muted-foreground mt-1">
-                              {task.department} Department
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                              {task.priority}
-                            </Badge>
-                            <Badge variant="outline">{task.status}</Badge>
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Tasks</CardTitle>
+                <CardDescription>{project.tasks.length} tasks</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {project.tasks.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No tasks yet
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {project.tasks.map((task) => (
+                      <div key={task.id} className="flex items-center gap-4 p-4 rounded-lg border">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(task.status)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium">{task.title}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {task.assignee?.name || 'Unassigned'} • {task.department?.name || 'No department'}
                           </div>
                         </div>
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <span>Assigned to:</span>
-                            <span className="font-medium">{task.assignee}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
-                          </div>
-                        </div>
+                        <Badge className={getPriorityColor(task.priority)}>
+                          {task.priority}
+                        </Badge>
+                        <Badge variant={task.status === 'COMPLETED' ? 'default' : 'secondary'}>
+                          {task.status}
+                        </Badge>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Departments Tab */}
           <TabsContent value="departments" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Departments</h2>
-                <p className="text-muted-foreground">HR-first organizational structure</p>
-              </div>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Department
-              </Button>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2">
-              {departments.map((dept) => (
-                <Card key={dept.id}>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{dept.name}</CardTitle>
-                    <CardDescription>
-                      Led by <span className="font-medium">{dept.head}</span>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Users className="h-4 w-4" />
-                        <span>{dept.members} members</span>
-                      </div>
-                      <div className="font-medium">{dept.tasks} tasks</div>
-                    </div>
-                    <Button variant="outline" className="w-full" size="sm">
-                      View Department <ChevronRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Departments</CardTitle>
+                <CardDescription>{project.departments.length} departments</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {project.departments.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No departments yet
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {project.departments.map((department) => (
+                      <Card key={department.id}>
+                        <CardHeader>
+                          <CardTitle className="text-lg">{department.name}</CardTitle>
+                          {department.head && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={department.head.avatar} />
+                                <AvatarFallback>{department.head.name?.split(' ').map((n: string) => n[0]).join('') || 'H'}</AvatarFallback>
+                              </Avatar>
+                              {department.head.name}
+                            </div>
+                          )}
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex justify-between text-sm">
+                            <span>{department._count.members} members</span>
+                            <span>{department._count.tasks} tasks</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Milestones Tab */}
           <TabsContent value="milestones" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Milestones</h2>
-                <p className="text-muted-foreground">Track key project achievements</p>
-              </div>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Milestone
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              {milestones.map((milestone) => (
-                <Card key={milestone.id} className={
-                  milestone.status === 'Completed' ? 'border-green-500/50 bg-green-500/5' : ''
-                }>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                        milestone.status === 'Completed' ? 'bg-green-500 text-white' : 'bg-muted'
-                      }`}>
-                        {milestone.status === 'Completed' ? (
-                          <CheckCircle2 className="h-6 w-6" />
-                        ) : (
-                          <Clock className="h-6 w-6 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="flex-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>All Milestones</CardTitle>
+                <CardDescription>{project.milestones.length} milestones</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {project.milestones.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No milestones yet
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {project.milestones.map((milestone) => (
+                      <div key={milestone.id} className="p-4 rounded-lg border">
                         <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-medium text-lg">{milestone.title}</h3>
-                          <Badge variant={milestone.status === 'Completed' ? 'default' : 'secondary'}>
+                          <div className="font-medium">{milestone.title}</div>
+                          <Badge variant={milestone.status === 'ACHIEVED' ? 'default' : 'secondary'}>
                             {milestone.status}
                           </Badge>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          <div>Target Date: {new Date(milestone.targetDate).toLocaleDateString()}</div>
-                          {milestone.achievedAt && (
-                            <div className="text-green-600 mt-1">
-                              Achieved: {new Date(milestone.achievedAt).toLocaleDateString()}
-                            </div>
-                          )}
+                          Target: {new Date(milestone.targetDate).toLocaleDateString()}
+                          {milestone.achievedAt && ` • Achieved: ${new Date(milestone.achievedAt).toLocaleDateString()}`}
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* Chat Tab */}
-          <TabsContent value="chat" className="space-y-6">
-            <div className="h-[600px]">
-              <TeamChat
-                roomId={params.id}
-                userId="user-mock"
-                userName="Current User"
-              />
-            </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>

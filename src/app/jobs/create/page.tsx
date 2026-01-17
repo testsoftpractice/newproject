@@ -202,7 +202,17 @@ export default function PostJobPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          employerId: user?.id,
+          title: formData.title,
+          companyName: formData.companyName,
+          category: formData.category,
+          type: formData.type,
+          description: formData.description,
+          location: formData.location,
+          salary: formData.salary ? Number(formData.salary) : null,
+          requirements: formData.requirements,
+          responsibilities: formData.responsibilities,
+          benefits: formData.benefits,
           positions: Number(formData.positions),
           salaryRange: formData.salaryRange.min && formData.salaryRange.max
             ? {
@@ -210,6 +220,8 @@ export default function PostJobPage() {
                 max: Number(formData.salaryRange.max)
               }
             : null,
+          deadline: formData.deadline || null,
+          applicationUrl: formData.applicationUrl || null,
         }),
       })
 

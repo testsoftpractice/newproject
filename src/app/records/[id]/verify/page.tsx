@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,10 +22,10 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  ArrowRight,
   Info,
   FileText,
   Send,
+  Loader2,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
@@ -36,36 +36,71 @@ export default function RequestVerificationPage() {
   const params = useParams()
   const router = useRouter()
   const { user } = useAuth()
+
   const [loading, setLoading] = useState(false)
+  const [fetchingRecord, setFetchingRecord] = useState(true)
   const [submitted, setSubmitted] = useState(false)
+  const [record, setRecord] = useState<any>(null)
 
   const [requestVerification, setRequestVerification] = useState({
-    subjectId: params.id || '',
-    requesterId: user?.id || '',
     purpose: '',
     accessDuration: 7,
     message: '',
   })
 
-  // Mock record data
-  const record = {
-    id: params.id || '1',
-    type: 'PROJECT_ROLE',
-    title: 'Senior Contributor - University News Channel',
-    description: 'Leading the editorial team and managing content production',
-    projectId: '1',
-    projectName: 'University News Channel',
-    roleName: 'Senior Contributor',
-    department: 'Editorial',
-    startDate: '2024-01-15',
-    endDate: null,
-    isVerified: true,
-    verifiedBy: 'Project Lead - Jennifer Lee',
-    verifiedAt: '2024-01-20',
-  }
+  // Fetch record details
+  useEffect(() => {
+    const fetchRecord = async () => {
+      try {
+        setFetchingRecord(true)
+        const response = await fetch(`/api/records/${params.id}`)
+        const data = await response.json()
 
-  const handleSubmit = async (e: any) => {
+        if (response.ok && data.record) {
+          setRecord(data.record)
+        } else {
+          toast({
+            title: 'Error',
+            description: 'Record not found',
+            variant: 'destructive',
+          })
+        }
+      } catch (error) {
+        console.error('Fetch record error:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch record details',
+          variant: 'destructive',
+        })
+      } finally {
+        setFetchingRecord(false)
+      }
+    }
+
+    if (params.id) {
+      fetchRecord()
+    }
+  }, [params.id])
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth')
+    }
+  }, [user, router])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!requestVerification.purpose) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please provide a purpose for verification',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -75,17 +110,17 @@ export default function RequestVerificationPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          subjectId: requestVerification.subjectId,
-          requesterId: requestVerification.requesterId,
+          subjectId: params.id,
+          requesterId: user.id,
           purpose: requestVerification.purpose,
-          accessDuration: parseInt(requestVerification.accessDuration),
+          accessDuration: parseInt(requestVerification.accessDuration.toString()),
           message: requestVerification.message,
         }),
       })
 
       const data = await response.json()
 
-      if (data.success) {
+      if (response.ok) {
         toast({
           title: 'Verification Requested',
           description: 'Verification request sent successfully! You will be notified when approved.',
@@ -98,16 +133,46 @@ export default function RequestVerificationPage() {
           variant: 'destructive',
         })
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Request verification error:', error)
       toast({
         title: 'Error',
-        description: error.message || 'An error occurred. Please try again.',
+        description: 'An error occurred. Please try again.',
         variant: 'destructive',
       })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (fetchingRecord) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-background">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <Link href={`/dashboard/${user.role?.toLowerCase()}`} className="flex items-center gap-2">
+                <FileText className="h-6 w-6 text-primary" />
+                <span className="font-bold text-xl">Request Verification</span>
+              </Link>
+            </div>
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
+          </div>
+        </main>
+      </div>
+    )
   }
 
   return (
@@ -116,13 +181,13 @@ export default function RequestVerificationPage() {
       <header className="border-b bg-background">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href={`/records/${user?.id}`} className="flex items-center gap-2">
+            <Link href={`/dashboard/${user.role?.toLowerCase()}`} className="flex items-center gap-2">
               <FileText className="h-6 w-6 text-primary" />
               <span className="font-bold text-xl">Request Verification</span>
             </Link>
             <Button variant="ghost" asChild>
-              <Link href={`/records/${user?.id}`}>
-                Back to Records
+              <Link href={`/dashboard/${user.role?.toLowerCase()}`}>
+                Back to Dashboard
               </Link>
             </Button>
           </div>
@@ -145,20 +210,20 @@ export default function RequestVerificationPage() {
                   <div className="text-sm text-muted-foreground mb-2">
                     <strong>What happens next?</strong>
                   </div>
-                  <div className="space-y-1 text-sm">
+                  <div className="space-y-1 text-sm text-left">
                     <div>• Record owner will review your verification request</div>
-                    <div>• Once approved, you'll have access to view the record</div>
+                    <div>• Once approved, you'll have access to view record</div>
                     <div>• You'll receive a notification when access is granted</div>
-                    <div>• Access will be automatically revoked after the specified duration</div>
+                    <div>• Access will be automatically revoked after specified duration</div>
                   </div>
                 </div>
-                <Button onClick={() => router.push(`/records/${user?.id}`)} className="max-w-sm mx-auto">
-                  Back to My Records
+                <Button onClick={() => router.push(`/dashboard/${user.role?.toLowerCase()}`)} className="max-w-sm mx-auto">
+                  Back to Dashboard
                 </Button>
               </CardContent>
             </Card>
           </div>
-        ) : (
+        ) : record ? (
           <>
             {/* Record Information Card */}
             <Card className="mb-6">
@@ -183,7 +248,7 @@ export default function RequestVerificationPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Record Type</div>
-                    <div className="font-semibold capitalize">{record.type.replace('_', ' ')}</div>
+                    <div className="font-semibold capitalize">{record.type?.replace('_', ' ')}</div>
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Title</div>
@@ -198,26 +263,28 @@ export default function RequestVerificationPage() {
                 </div>
 
                 {/* Project Context */}
-                {record.projectName && (
+                {record.projectId && (
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Project</div>
-                    <div className="font-semibold">{record.projectName}</div>
+                    <div className="font-semibold">Linked to a platform project</div>
                   </div>
                 )}
 
                 {/* Role and Department */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Role</div>
-                    <div className="font-semibold">{record.roleName}</div>
-                  </div>
-                  {record.department && (
+                {record.roleName && (
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <div className="text-sm text-muted-foreground mb-1">Department</div>
-                      <div className="font-semibold">{record.department}</div>
+                      <div className="text-sm text-muted-foreground mb-1">Role</div>
+                      <div className="font-semibold">{record.roleName}</div>
                     </div>
-                  )}
-                </div>
+                    {record.department && (
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">Department</div>
+                        <div className="font-semibold">{record.department}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Dates */}
                 <div className="grid gap-4 md:grid-cols-2">
@@ -241,8 +308,7 @@ export default function RequestVerificationPage() {
                       <div>
                         <div className="font-semibold text-green-600">Verified</div>
                         <div className="text-sm text-green-600/80 mt-1">
-                          This record has been authenticated by <strong>{record.verifiedBy}</strong> on {new Date(record.verifiedAt).toLocaleDateString()}.
-                          The record details have been cryptographically hashed and verified as accurate.
+                          This record has been authenticated and cryptographically verified as accurate.
                         </div>
                       </div>
                     </div>
@@ -292,7 +358,7 @@ export default function RequestVerificationPage() {
                         required
                       />
                       <p className="text-xs text-muted-foreground">
-                        Be specific about your purpose as it helps the record owner understand the context
+                        Be specific about your purpose as it helps record owner understand the context
                       </p>
                     </div>
                   </div>
@@ -369,66 +435,45 @@ export default function RequestVerificationPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => router.push(`/records/${user?.id}`)}
+                      onClick={() => router.push(`/dashboard/${user.role?.toLowerCase()}`)}
                       disabled={loading}
                     >
                       Cancel
                     </Button>
                     <Button
                       type="submit"
-                      disabled={loading || !requestVerification.purpose.trim() || !requestVerification.accessDuration}
+                      disabled={loading}
                     >
-                      {loading ? 'Submitting...' : 'Request Verification'}
-                      <Send className="ml-2 h-4 w-4" />
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="mr-2 h-4 w-4" />
+                          Submit Request
+                        </>
+                      )}
                     </Button>
                   </div>
                 </form>
               </CardContent>
             </Card>
-
-            {/* Privacy & Security Info */}
-            <Card className="mt-6 border-purple-500/20 bg-purple-500/5">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-purple-500" />
-                  <CardTitle className="text-base">Privacy & Security</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="font-medium">Protected Access</div>
-                    <div className="text-sm text-muted-foreground">
-                      All verification requests are logged and only authorized parties can approve access.
-                      Your personal information is protected throughout the process.
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Clock className="h-5 w-5 text-orange-500 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="font-medium">Request Review</div>
-                    <div className="text-sm text-muted-foreground">
-                      Record owners typically review requests within 24-48 hours.
-                      You'll receive a notification when your request is processed.
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="font-medium">No Data Access Yet</div>
-                    <div className="text-sm text-muted-foreground">
-                      You are requesting access to view the record. Access will only be granted
-                      after the record owner approves your verification request.
-                      No data will be downloaded until access is granted.
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </>
+        ) : (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <AlertCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-2">Record Not Found</h3>
+              <p className="text-muted-foreground mb-6">
+                The professional record you're looking for doesn't exist or you don't have permission to access it.
+              </p>
+              <Button onClick={() => router.push(`/dashboard/${user.role?.toLowerCase()}`)}>
+                Back to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
         )}
       </main>
     </div>

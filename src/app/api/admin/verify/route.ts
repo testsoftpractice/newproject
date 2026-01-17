@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       valid: true,
       user: {
         id: 'admin',
-        email: 'admin@appliedexecution.com',
+        email: 'admin@careertodo.com',
         role: 'ADMIN',
         name: 'Platform Admin',
       },

@@ -8,6 +8,21 @@ export const signupSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   role: z.enum(['STUDENT', 'UNIVERSITY', 'EMPLOYER', 'INVESTOR', 'PLATFORM_ADMIN']),
   bio: z.string().optional(),
+  // Student specific fields
+  universityId: z.string().optional(),
+  major: z.string().optional(),
+  graduationYear: z.string().optional(),
+  // University specific fields
+  universityName: z.string().optional(),
+  universityCode: z.string().optional(),
+  website: z.string().url().optional().or(z.literal('')),
+  // Employer specific fields
+  companyName: z.string().optional(),
+  companyWebsite: z.string().url().optional().or(z.literal('')),
+  position: z.string().optional(),
+  // Investor specific fields
+  firmName: z.string().optional(),
+  investmentFocus: z.string().optional(),
 })
 
 export const loginSchema = z.object({

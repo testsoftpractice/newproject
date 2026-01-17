@@ -87,6 +87,7 @@ export class RateLimiter {
       }
     }
   }
+}
 
 /**
  * Create rate limiter instance

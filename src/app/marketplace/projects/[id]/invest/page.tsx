@@ -17,15 +17,14 @@ export default function MarketInvestmentPage({ params }: { params: Promise<{ id:
   const [amount, setAmount] = useState('')
   const [equity, setEquity] = useState('')
   const [terms, setTerms] = useState('')
-  const resolvedParams = React.use(params)
 
   useEffect(() => {
     const fetchProject = async () => {
-      if (!user || !resolvedParams.id) return
+      if (!user || !params.id) return
 
       try {
         setLoading(true)
-        const response = await fetch(`/api/projects/${resolvedParams.id}`)
+        const response = await fetch(`/api/projects/${params.id}`)
         const data = await response.json()
 
         if (data.success) {
@@ -66,7 +65,7 @@ export default function MarketInvestmentPage({ params }: { params: Promise<{ id:
         body: JSON.stringify({
           projectId: project.id,
           investorId: user.id,
-          type: 'EQUITY',
+          investmentType: 'EQUITY',
           amount: parseFloat(amount) || 0,
           equity: parseFloat(equity) || 0,
           terms,

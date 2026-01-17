@@ -3,33 +3,16 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import {
-  X,
-  Plus,
-  ArrowRight,
-  Loader2,
-  Building2,
-  DollarSign,
-  Globe,
-  Mail,
-  Phone,
-  MapPin,
-  Star,
-  CheckCircle2,
-} from 'lucide-react'
-import Link from 'next/link'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { X, Plus, ArrowRight, Loader2, Building2, Mail, Phone, MapPin, DollarSign, Globe } from 'lucide-react'
+import PublicHeader from '@/components/public-header'
+import PublicFooter from '@/components/public-footer'
 import { toast } from '@/hooks/use-toast'
+import Link from 'next/link'
 
 export default function SupplierCreatePage() {
   const [loading, setLoading] = useState(false)
@@ -37,103 +20,19 @@ export default function SupplierCreatePage() {
     businessName: '',
     description: '',
     category: 'Technology',
-    subCategories: [] as string[],
-    expertise: [] as string[],
+    expertise: '',
     hourlyRate: '',
     location: '',
     website: '',
     contactEmail: '',
     contactPhone: '',
-    companySize: '',
-    yearsInBusiness: '',
-    portfolioLinks: [] as string[],
-    services: [] as string[],
-    certifications: [] as string[],
   })
-  const [currentSubCategory, setCurrentSubCategory] = useState('')
-  const [currentExpertise, setCurrentExpertise] = useState('')
-  const [currentPortfolioLink, setCurrentPortfolioLink] = useState('')
-  const [currentService, setCurrentService] = useState('')
-  const [currentCertification, setCurrentCertification] = useState('')
 
   const categories = ['Technology', 'Design', 'Marketing', 'Data & Analytics', 'Content', 'Business', 'Consulting']
-  const companySizes = ['1-10', '11-50', '51-200', '201-500', '500+']
-  const yearsOptions = ['Less than 1 year', '1-3 years', '3-5 years', '5-10 years', '10+ years']
 
   // Handle form input changes
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-  }
-
-  // Add sub-category
-  const handleAddSubCategory = () => {
-    if (currentSubCategory.trim() && !formData.subCategories.includes(currentSubCategory.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        subCategories: [...prev.subCategories, currentSubCategory.trim()]
-      }))
-      setCurrentSubCategory('')
-    }
-  }
-
-  // Add expertise
-  const handleAddExpertise = () => {
-    if (currentExpertise.trim() && !formData.expertise.includes(currentExpertise.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        expertise: [...prev.expertise, currentExpertise.trim()]
-      }))
-      setCurrentExpertise('')
-    }
-  }
-
-  // Add portfolio link
-  const handleAddPortfolioLink = () => {
-    if (currentPortfolioLink.trim() && !formData.portfolioLinks.includes(currentPortfolioLink.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        portfolioLinks: [...prev.portfolioLinks, currentPortfolioLink.trim()]
-      }))
-      setCurrentPortfolioLink('')
-    }
-  }
-
-  // Add service
-  const handleAddService = () => {
-    if (currentService.trim() && !formData.services.includes(currentService.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        services: [...prev.services, currentService.trim()]
-      }))
-      setCurrentService('')
-    }
-  }
-
-  // Add certification
-  const handleAddCertification = () => {
-    if (currentCertification.trim() && !formData.certifications.includes(currentCertification.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        certifications: [...prev.certifications, currentCertification.trim()]
-      }))
-      setCurrentCertification('')
-    }
-  }
-
-  // Remove item from array
-  const handleRemoveItem = (field: keyof typeof formData, itemToRemove: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: (prev[field] as string[]).filter((item) => item !== itemToRemove)
-    }))
-  }
-
-  // Handle input key down
-  const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      action()
-    }
   }
 
   // Validate form
@@ -154,14 +53,6 @@ export default function SupplierCreatePage() {
       })
       return false
     }
-    if (!formData.location.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please enter your business location',
-        variant: 'destructive'
-      })
-      return false
-    }
     if (!formData.contactEmail.trim()) {
       toast({
         title: 'Validation Error',
@@ -170,18 +61,10 @@ export default function SupplierCreatePage() {
       })
       return false
     }
-    if (formData.expertise.length === 0) {
+    if (!formData.expertise.trim()) {
       toast({
         title: 'Validation Error',
-        description: 'Please add at least one area of expertise',
-        variant: 'destructive'
-      })
-      return false
-    }
-    if (formData.services.length === 0) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please add at least one service',
+        description: 'Please enter your area of expertise',
         variant: 'destructive'
       })
       return false
@@ -201,8 +84,16 @@ export default function SupplierCreatePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          name: formData.businessName,
+          businessName: formData.businessName,
+          description: formData.description,
+          category: formData.category,
+          expertise: [formData.expertise],
           hourlyRate: formData.hourlyRate ? Number(formData.hourlyRate) : null,
+          location: formData.location,
+          website: formData.website,
+          contactEmail: formData.contactEmail,
+          contactPhone: formData.contactPhone,
         }),
       })
 

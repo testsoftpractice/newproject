@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         universityId: university?.id,
         major: role === 'STUDENT' ? major : null,
-        graduationYear: role === 'STUDENT' ? parseInt(graduationYear) : null,
+        graduationYear: role === 'STUDENT' && graduationYear ? parseInt(graduationYear) : null,
       },
     })
 
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         type: 'SKILL_ACQUIRED',
         title: 'Platform Registration',
-        description: `Registered as ${role} on Applied Execution Platform`,
+        description: `Registered as ${role} on CareerToDo Platform`,
         startDate: new Date(),
         metadata: JSON.stringify({ role, email }),
       },

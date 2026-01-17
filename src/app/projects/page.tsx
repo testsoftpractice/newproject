@@ -224,7 +224,6 @@ export default function ProjectsPage() {
                           {project.startDate
                             ? new Date(project.startDate).toLocaleDateString()
                             : 'Not started'}
-                        }
                         </span>
                       </div>
                     </div>

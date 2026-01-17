@@ -4,7 +4,15 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Shield, Mail, Lock, Eye, UserPlus, RefreshCw } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { ArrowLeft, Shield, Mail, Lock, Eye, UserPlus, RefreshCw, Loader2, Search } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from '@/hooks/use-toast'
 
@@ -13,10 +21,9 @@ interface User {
   name: string
   email: string
   role: string
-  university?: string
-  verificationStatus: string
-  createdAt: string
-  lastLogin?: string
+  status?: string
+  joinedAt: string
+  reputation: number
 }
 
 export default function AdminUsersPage() {
@@ -26,341 +33,277 @@ export default function AdminUsersPage() {
 
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
+  const [totalCount, setTotalCount] = useState(0)
+  const [page, setPage] = useState(1)
+  const pageSize = 20
 
-  // Mock users data
-  const mockUsers: User[] = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@university.edu',
-      role: 'STUDENT',
-      university: 'MIT',
-      verificationStatus: 'VERIFIED',
-      createdAt: '2024-12-10T10:00:00Z',
-      lastLogin: '2024-01-13T14:30:00Z',
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      email: 'michael.chen@stanford.edu',
-      role: 'STUDENT',
-      university: 'Stanford',
-      verificationStatus: 'VERIFIED',
-      createdAt: '2024-12-05T09:00:00Z',
-      lastLogin: '2024-01-12T11:15:00Z',
-    },
-    {
-      id: '3',
-      name: 'Emily Davis',
-      email: 'emily.davis@example.com',
-      role: 'EMPLOYER',
-      university: null,
-      verificationStatus: 'VERIFIED',
-      createdAt: '2024-11-28T15:30:00Z',
-      lastLogin: '2024-01-13T16:45:00Z',
-    },
-    {
-      id: '4',
-      name: 'James Wilson',
-      email: 'james.wilson@example.com',
-      role: 'INVESTOR',
-      university: null,
-      verificationStatus: 'VERIFIED',
-      createdAt: '2024-12-01T08:00:00Z',
-      lastLogin: '2024-01-10T09:20:00Z',
-    },
-    {
-      id: '5',
-      name: 'Dr. Robert Martinez',
-      email: 'r.martinez@harvard.edu',
-      role: 'UNIVERSITY_ADMIN',
-      university: 'Harvard',
-      verificationStatus: 'VERIFIED',
-      createdAt: '2024-11-15T12:00:00Z',
-      lastLogin: '2024-01-13T10:00:00Z',
-    },
-    {
-      id: '6',
-      name: 'Jessica Taylor',
-      email: 'jessica.t@berkeley.edu',
-      role: 'STUDENT',
-      university: 'Berkeley',
-      verificationStatus: 'PENDING',
-      createdAt: '2024-12-20T14:00:00Z',
-      lastLogin: null,
-    },
-  ]
-
+  // Fetch users from API
   useEffect(() => {
     const fetchUsers = async () => {
-      setLoading(true)
-      await new Promise(resolve => setTimeout(resolve, 500))
-      setUsers(mockUsers)
-      setLoading(false)
+      try {
+        setLoading(true)
+        const params = new URLSearchParams()
+        if (searchQuery) params.append('search', searchQuery)
+        params.append('page', page.toString())
+        params.append('limit', pageSize.toString())
+
+        const response = await fetch(`/api/admin/users?${params.toString()}`)
+        const data = await response.json()
+
+        if (data.success) {
+          setUsers(data.data?.users || [])
+          setTotalCount(data.data?.totalCount || 0)
+        } else {
+          toast({
+            title: 'Error',
+            description: data.error || 'Failed to fetch users',
+            variant: 'destructive'
+          })
+        }
+      } catch (error) {
+        console.error('Fetch users error:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch users',
+          variant: 'destructive'
+        })
+      } finally {
+        setLoading(false)
+      }
     }
+
     fetchUsers()
-  }, [])
+  }, [searchQuery, page])
+
+  const handleSearch = (value: string) => {
+    setSearchQuery(value)
+    setPage(1)
+  }
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = !searchQuery || 
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesRole = roleFilter === 'all' || user.role === roleFilter
-    const matchesVerification = verificationFilter === 'all' || user.verificationStatus === verificationFilter
-    return matchesSearch && matchesRole && matchesVerification
+    const matchesVerification = verificationFilter === 'all' || user.status === verificationFilter
+    return matchesRole && matchesVerification
   })
 
-  const handleAction = async (action: string, user: User) => {
-    toast({
-      title: 'Action',
-      description: `${action} user: ${user.name}`,
-    })
+  const getRoleBadge = (role: string) => {
+    const roleColors: Record<string, string> = {
+      STUDENT: 'bg-blue-500/10 text-blue-500',
+      UNIVERSITY_ADMIN: 'bg-purple-500/10 text-purple-500',
+      EMPLOYER: 'bg-green-500/10 text-green-500',
+      INVESTOR: 'bg-orange-500/10 text-orange-500',
+      PLATFORM_ADMIN: 'bg-red-500/10 text-red-500',
+      MENTOR: 'bg-cyan-500/10 text-cyan-500',
+    }
+    return (
+      <Badge className={roleColors[role] || 'bg-gray-500/10 text-gray-500'}>
+        {role.replace(/_/g, ' ')}
+      </Badge>
+    )
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-primary text-primary-foreground sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
-              <h1 className="text-xl sm:text-2xl font-bold truncate">Manage Users</h1>
+      {/* Header */}
+      <header className="border-b bg-background sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/admin/governance" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="h-5 w-5" />
+                <span className="font-semibold">Back to Governance</span>
+              </Link>
+              <div className="h-6 w-px bg-border" />
+              <div>
+                <h1 className="text-xl font-bold">User Management</h1>
+                <p className="text-sm text-muted-foreground">Manage all platform users</p>
+              </div>
             </div>
-            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-              <Button variant="ghost" size="sm" asChild className="text-primary-foreground hover:bg-primary/80">
-                <Link href="/admin/governance">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline ml-2">Back to Admin</span>
-                  <span className="sm:hidden">Back</span>
-                </Link>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <main className="container mx-auto px-4 py-8">
+        {/* Stats Cards */}
+        <div className="grid gap-6 mb-8 md:grid-cols-4">
           <Card>
-            <CardHeader>
-              <CardTitle>User Statistics</CardTitle>
-              <CardDescription>Overview of user base</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <UserPlus className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 sm:gap-6 grid-cols-2 md:grid-cols-4">
-                <div className="text-center space-y-1 sm:space-y-2">
-                  <div className="text-3xl sm:text-4xl font-bold break-words">{users.length}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Total Users</div>
-                </div>
-                <div className="text-center space-y-1 sm:space-y-2">
-                  <div className="text-3xl sm:text-4xl font-bold text-green-500 break-words">{users.filter(u => u.verificationStatus === 'VERIFIED').length}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Verified</div>
-                </div>
-                <div className="text-center space-y-1 sm:space-y-2">
-                  <div className="text-3xl sm:text-4xl font-bold text-yellow-500 break-words">{users.filter(u => u.verificationStatus === 'PENDING').length}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Pending</div>
-                </div>
-                <div className="text-center space-y-1 sm:space-y-2">
-                  <div className="text-3xl sm:text-4xl font-bold text-red-500 break-words">{users.filter(u => u.verificationStatus === 'REJECTED').length}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Rejected</div>
-                </div>
-              </div>
+              <div className="text-2xl font-bold">{totalCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Registered users</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Search & Filter</CardTitle>
-              <CardDescription>Find and filter users</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Students</CardTitle>
+              <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-4">
-              <div className="flex-1 relative min-w-0">
-                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <input
-                  type="text"
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {users.filter(u => u.role === 'STUDENT').length}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Active students</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Admins</CardTitle>
+              <Lock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {users.filter(u => u.role === 'PLATFORM_ADMIN' || u.role === 'UNIVERSITY_ADMIN').length}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Platform & university admins</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Employers & Investors</CardTitle>
+              <Mail className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {users.filter(u => u.role === 'EMPLOYER' || u.role === 'INVESTOR').length}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">External partners</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters and Search */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 flex items-center gap-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
                   placeholder="Search users by name or email..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 sm:py-3 border rounded-md text-sm sm:text-base"
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="flex-1"
                 />
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={roleFilter === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRoleFilter('all')}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={roleFilter === 'STUDENT' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRoleFilter('STUDENT')}
-                >
-                  Students
-                </Button>
-                <Button
-                  variant={roleFilter === 'EMPLOYER' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRoleFilter('EMPLOYER')}
-                >
-                  Employers
-                </Button>
-                <Button
-                  variant={roleFilter === 'INVESTOR' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRoleFilter('INVESTOR')}
-                >
-                  Investors
-                </Button>
-                <Button
-                  variant={roleFilter === 'UNIVERSITY_ADMIN' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRoleFilter('UNIVERSITY_ADMIN')}
-                >
-                  Universities
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={verificationFilter === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setVerificationFilter('all')}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={verificationFilter === 'VERIFIED' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setVerificationFilter('VERIFIED')}
-                >
-                  Verified
-                </Button>
-                <Button
-                  variant={verificationFilter === 'PENDING' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setVerificationFilter('PENDING')}
-                >
-                  Pending
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Filter by role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="STUDENT">Students</SelectItem>
+                  <SelectItem value="UNIVERSITY_ADMIN">University Admins</SelectItem>
+                  <SelectItem value="EMPLOYER">Employers</SelectItem>
+                  <SelectItem value="INVESTOR">Investors</SelectItem>
+                  <SelectItem value="PLATFORM_ADMIN">Platform Admins</SelectItem>
+                  <SelectItem value="MENTOR">Mentors</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={verificationFilter} onValueChange={setVerificationFilter}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="INACTIVE">Inactive</SelectItem>
+                  <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Users List</CardTitle>
-              <CardDescription>
-                {filteredUsers.length} user{filteredUsers.length === 1 ? '' : 's'} found
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="animate-pulse text-center py-8 sm:py-12">
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 border-4 border-t-blue-500 border-r-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-sm text-muted-foreground mt-2">Loading users...</p>
+        {/* Users Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Users List</CardTitle>
+            <CardDescription>
+              Showing {filteredUsers.length} of {totalCount} total users
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No users found matching the criteria
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredUsers.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <span className="font-semibold text-primary">
+                          {user.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="font-medium">{user.name}</div>
+                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {getRoleBadge(user.role)}
+                      {user.status && (
+                        <Badge variant={user.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                          {user.status}
+                        </Badge>
+                      )}
+                      <div className="text-sm text-muted-foreground">
+                        {user.reputation} pts
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {!loading && filteredUsers.length > 0 && (
+              <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Page {page} of {Math.ceil(totalCount / pageSize)}
                 </div>
-              ) : filteredUsers.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">User</th>
-                        <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">Email</th>
-                        <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">Role</th>
-                        <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">Status</th>
-                        <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">Joined</th>
-                        <th className="text-right p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredUsers.map((user) => (
-                        <tr key={user.id} className="border-b hover:bg-muted/50">
-                          <td className="p-3 sm:p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/20 flex items-center justify-center font-semibold text-primary flex-shrink-0">
-                                {user.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="font-medium text-sm sm:text-base truncate">{user.name}</div>
-                                <div className="text-xs sm:text-sm text-muted-foreground truncate">{user.email}</div>
-                                {user.university && (
-                                  <div className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
-                                    • {user.university}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-3 sm:p-4">
-                            <Badge variant="outline" className="text-xs sm:text-sm">{user.role.replace('_', ' ')}</Badge>
-                          </td>
-                          <td className="p-3 sm:p-4">
-                            <Badge
-                              variant={user.verificationStatus === 'VERIFIED' ? 'default' : user.verificationStatus === 'PENDING' ? 'secondary' : 'destructive'}
-                              className="text-xs sm:text-sm"
-                            >
-                              {user.verificationStatus}
-                            </Badge>
-                          </td>
-                          <td className="p-3 sm:p-4 text-xs sm:text-sm text-muted-foreground">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="p-3 sm:p-4">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toast({ title: 'View User', description: user.name })}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toast({ title: 'Reset Password', description: user.name })}
-                              >
-                                <Lock className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleAction('Locked', user)}
-                              >
-                                <RefreshCw className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-8 sm:py-12">
-                  <UserPlus className="h-16 w-16 sm:h-20 sm:w-20 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg sm:text-xl font-semibold mb-2">No Users Found</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
-                    No users match your search and filter criteria.
-                  </p>
-                  <Button variant="outline" className="text-sm sm:text-base" asChild>
-                    <Link href="/admin/governance">
-                      Back to Admin Dashboard
-                    </Link>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={page >= Math.ceil(totalCount / pageSize)}
+                  >
+                    Next
                   </Button>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="text-center pt-6 sm:pt-8">
-            <Button variant="outline" className="text-sm sm:text-base" asChild>
-              <Link href="/admin/governance">
-                Back to Admin Dashboard
-              </Link>
-            </Button>
-          </div>
-        </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   )

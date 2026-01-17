@@ -1,23 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Shield, LogOut, Home, CheckCircle2 } from 'lucide-react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { toast } from '@/hooks/use-toast'
+import PublicHeader from '@/components/public-header'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: any) => {
+  const handleLogin = async (e: any) => {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -25,29 +19,23 @@ export default function AdminLoginPage() {
     try {
       const response = await fetch('/api/admin/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
 
       const data = await response.json()
 
       if (data.success) {
-        localStorage.setItem('admin_token', data.token)
-        localStorage.setItem('admin_user', JSON.stringify(data.user))
-        localStorage.setItem('admin_role', 'admin')
+        // Store admin token
+        localStorage.setItem('adminToken', data.token)
+        localStorage.setItem('adminUser', JSON.stringify(data.user))
         
-        toast({
-          title: 'Admin Login Successful',
-          description: 'Welcome back, Administrator',
-        })
-
+        setError('Login successful! Redirecting...')
         setTimeout(() => {
           router.push('/admin')
-        }, 500)
+        }, 1000)
       } else {
-        setError(data.error || 'Invalid admin credentials')
+        setError(data.error || 'Login failed')
       }
     } catch (err: any) {
       console.error('Admin login error:', err)
@@ -58,138 +46,70 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-900">
-      <div className="absolute top-0 left-0 w-full">
-        <Link href="/">
-          <Button variant="ghost" size="icon" className="absolute top-4 right-4 bg-slate-800/20 hover:bg-slate-700 text-white">
-            <Home className="h-4 w-4" />
-          </Button>
-        </Link>
-      </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      <PublicHeader />
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-md mx-auto">
-          <Card>
-            <CardHeader className="space-y-2 text-center">
-              <div className="flex justify-center mb-4">
-                <Shield className="h-12 w-12 text-primary" />
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md p-6 border rounded-lg shadow-lg">
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-center">Admin Login</h2>
+              <p className="text-sm text-muted-foreground text-center">Platform Administrator Access</p>
+            </div>
+
+            {error && (
+              <div className={`p-4 rounded-lg border ${error.includes('successful') || error.includes('Login') || error.includes('Redirecting') ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                <div className="text-center font-medium">{error}</div>
               </div>
-              <CardTitle className="text-2xl">Admin Login</CardTitle>
-              <CardDescription>
-                Enter your administrator credentials to access admin dashboard
-              </CardDescription>
-            </CardHeader>
+            )}
 
-            <CardContent>
-              {error && (
-                <div className="p-3 mb-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2">
-                  <Shield className="h-5 w-5 text-red-500 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="font-semibold text-red-600">Login Failed</div>
-                    <div className="text-sm text-red-600">{error}</div>
-                  </div>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Admin Email</Label>
-                  <div className="relative">
-                    <CheckCircle2 className="absolute left-3 top-3 h-4 w-4 text-green-500" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="admin@appliedexecution.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={loading}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Use your designated admin email address
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Shield className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="•••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={loading}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Enter your secure admin password
-                  </p>
-                </div>
-
-                <div className="p-4 bg-slate-800/10 border border-slate-700/20 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <Shield className="h-5 w-5 text-yellow-500 mt-0.5" />
-                    <div className="flex-1 text-sm text-slate-200">
-                      <div className="font-semibold mb-1">Security Notice</div>
-                      <div>
-                        This is an administrative login. All actions performed here are logged and monitored
-                        for compliance purposes. Use admin privileges responsibly and in accordance
-                        with platform policies.
-                      </div>
-                      <div className="mt-2 text-xs text-slate-400">
-                        Demo credentials: admin@appliedexecution.com / adminpassword123
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => router.push('/')}
-                    disabled={loading}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={loading || !email.trim() || !password.trim()}
-                    className="flex-1"
-                  >
-                    {loading ? 'Logging in...' : 'Admin Login'}
-                  </Button>
-                </div>
-              </form>
-
-              <div className="text-center pt-4">
-                <Link href="/" className="text-sm text-slate-400 hover:text-slate-300">
-                  Return to Home
-                </Link>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-medium mb-2">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="admin@careertodo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
+                  className="w-full px-4 py-2 border rounded-md"
+                />
               </div>
-            </CardContent>
-
-            <CardFooter className="text-xs text-slate-400">
-              <div className="flex items-center justify-center gap-2">
-                <div className="flex items-center gap-1">
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span>SSL Secured</span>
-                </div>
-                <div className="text-slate-400">
-                  IP: 192.168.1.1 • Admin Server v1.0.0
-                </div>
+              <div className="space-y-2">
+                <label htmlFor="password" className="block text-sm font-medium mb-2">Password</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Enter admin password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  className="w-full px-4 py-2 border rounded-md"
+                />
               </div>
-            </CardFooter>
-          </Card>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all"
+              >
+                {loading ? 'Logging in...' : 'Login'}
+              </button>
+            </form>
+
+            <div className="mt-4 p-4 bg-muted rounded-md text-sm">
+              <p className="font-semibold mb-2">Demo Credentials:</p>
+              <p className="text-muted-foreground">Email: admin@careertodo.com</p>
+              <p className="text-muted-foreground">Password: adminpassword123</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

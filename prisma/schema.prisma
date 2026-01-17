@@ -1,4 +1,4 @@
-// Applied Execution & Venture Platform - Complete Database Schema
+// CareerToDo & Venture Platform - Complete Database Schema
 // This schema supports multi-stakeholder collaboration with governance,
 // reputation systems, lifelong records, and investment workflows
 
@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -55,7 +55,14 @@ model User {
   universityId      String?
   major             String?
   graduationYear    Int?
-
+  // Employer Specific
+    companyName      String?
+    position         String?
+    companyWebsite  String?
+  // Investor Specific
+    firmName         String?
+    investmentFocus String?
+  // Reputation Scores (multi-dimensional)
   // Reputation Scores (multi-dimensional)
   executionScore    Float              @default(0)
   collaborationScore Float             @default(0)
@@ -86,6 +93,7 @@ model User {
   investments       Investment[]
   investmentProjects Project[]         @relation("ProjectInvestor")
   auditLogs         AuditLog[]
+  suppliers         Supplier[]
 
   @@index([role])
   @@index([universityId])
@@ -753,6 +761,49 @@ model Notification {
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
+}
+
+// ==================== SUPPLIERS ====================
+
+model Supplier {
+  id                String   @id @default(cuid())
+  userId            String?  // User who owns this supplier profile
+
+  // Basic Info
+  name              String   @unique
+  description       String
+  category          String
+
+  // Contact Info
+  contactEmail      String
+  contactPhone      String?
+  location          String?
+  website           String?
+
+  // Pricing & Metrics
+  hourlyRate        Float?
+  rating            Float    @default(0)
+  projectsCompleted  Int       @default(0)
+  verified          Boolean   @default(false)
+
+  // Additional Info
+  skills            String?   // JSON string array
+  services          String?   // JSON string array
+  certifications   String?   // JSON string array
+  portfolioLinks    String?   // JSON string array
+  companySize       String?
+  yearsInBusiness   String?
+
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  owner             User?     @relation(fields: [userId], references: [id])
+
+  @@index([category])
+  @@index([rating])
+  @@index([verified])
 }
 
 

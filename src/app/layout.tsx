@@ -15,15 +15,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Applied Execution Platform",
+  title: "CareerToDo Platform",
   description: "A governed ecosystem where students operate real organizations, building verifiable careers from university onward.",
-  keywords: ["Applied Execution", "Student Platform", "University Platform", "Employer Platform", "Investor Platform"],
-  authors: [{ name: "Applied Execution Team" }],
+  keywords: ["CareerToDo", "Student Platform", "University Platform", "Employer Platform", "Investor Platform"],
+  authors: [{ name: "CareerToDo Team" }],
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "Applied Execution Platform",
+    title: "CareerToDo Platform",
     description: "A governed ecosystem where students operate real organizations, building verifiable careers from university onward.",
     type: "website",
   },

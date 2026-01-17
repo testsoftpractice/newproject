@@ -83,18 +83,18 @@ export function formatErrorResponse(error: AppError) {
   }
 }
 
-export async function asyncHandler(fn: Function) {
+export async function asyncHandler(fn: (req: any, res: any, next: any) => Promise<any>) {
   return async (req: any, res: any, next: any) => {
     try {
       return await fn(req, res, next)
     } catch (error) {
       logError(error)
-      
+
       if (error instanceof AppError) {
         const response = formatErrorResponse(error)
         return res.status(error.statusCode).json(response)
       }
-      
+
       const appError = new AppError('An unexpected error occurred')
       const response = formatErrorResponse(appError)
       return res.status(500).json(response)

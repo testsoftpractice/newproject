@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -36,130 +35,224 @@ import {
   Scale,
   Download,
   Calendar,
+  RefreshCw,
+  Loader2,
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "@/hooks/use-toast"
 
+interface AdminStats {
+  totalUsers: number
+  activeProjects: number
+  pendingProjects: number
+  completedProjects: number
+  totalProjects: number
+  todayActive: number
+  todayCompleted: number
+  todaySubmissions: number
+  flaggedContent: number
+  pendingApprovals: number
+  rejectedProjects: number
+  complianceScore: number
+  systemHealth: string
+  lastAudit: string
+}
+
+interface PendingProject {
+  id: string
+  title: string
+  category: string
+  university?: { name: string }
+  projectLead?: { name: string; email: string }
+  createdAt: string
+  status: string
+  completionRate: number
+  description: string
+}
+
+interface AuditLog {
+  id: string
+  action: string
+  entity: string
+  performedBy?: { name: string }
+  details: string
+  createdAt: string
+}
+
+interface GovernanceProposal {
+  id: string
+  type: string
+  title: string
+  description: string
+  priority: string
+  status: string
+  currentStage: string
+  createdBy?: { name: string }
+  createdAt: string
+  projectId?: string
+}
+
 export default function GovernancePage() {
   const [activeTab, setActiveTab] = useState("overview")
   const [searchQuery, setSearchQuery] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState({
+    stats: false,
+    projects: false,
+    audits: false,
+    proposals: false,
+  })
 
-  // Mock data
-  const stats = {
-    totalProjects: 124,
-    pendingApprovals: 8,
-    activeProjects: 98,
-    completedProjects: 18,
-    totalUsers: 1456,
-    verifiedUsers: 1389,
-    pendingVerifications: 67,
-    disputeRequests: 3,
-    complianceIssues: 2,
+  // Data from API
+  const [stats, setStats] = useState<AdminStats | null>(null)
+  const [pendingProjects, setPendingProjects] = useState<PendingProject[]>([])
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
+  const [proposals, setProposals] = useState<GovernanceProposal[]>([])
+
+  // Fetch admin stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(prev => ({ ...prev, stats: true }))
+        const response = await fetch('/api/admin/stats')
+        const data = await response.json()
+        if (data.success) {
+          setStats(data.data)
+        }
+      } catch (error) {
+        console.error('Fetch stats error:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch admin statistics',
+          variant: 'destructive'
+        })
+      } finally {
+        setLoading(prev => ({ ...prev, stats: false }))
+      }
+    }
+
+    fetchStats()
+  }, [])
+
+  // Fetch pending projects
+  useEffect(() => {
+    const fetchPendingProjects = async () => {
+      try {
+        setLoading(prev => ({ ...prev, projects: true }))
+        const response = await fetch('/api/admin/projects?status=PENDING')
+        const data = await response.json()
+        if (data.success) {
+          setPendingProjects(data.data?.projects || [])
+        }
+      } catch (error) {
+        console.error('Fetch projects error:', error)
+      } finally {
+        setLoading(prev => ({ ...prev, projects: false }))
+      }
+    }
+
+    fetchPendingProjects()
+  }, [])
+
+  // Fetch audit logs
+  useEffect(() => {
+    const fetchAuditLogs = async () => {
+      try {
+        setLoading(prev => ({ ...prev, audits: true }))
+        const response = await fetch('/api/audits')
+        const data = await response.json()
+        if (data.success) {
+          setAuditLogs(data.data?.logs || [])
+        }
+      } catch (error) {
+        console.error('Fetch audits error:', error)
+      } finally {
+        setLoading(prev => ({ ...prev, audits: false }))
+      }
+    }
+
+    if (activeTab === 'audits') {
+      fetchAuditLogs()
+    }
+  }, [activeTab])
+
+  // Fetch governance proposals
+  useEffect(() => {
+    const fetchProposals = async () => {
+      try {
+        setLoading(prev => ({ ...prev, proposals: true }))
+        const response = await fetch('/api/governance/proposals')
+        const data = await response.json()
+        if (data.success) {
+          setProposals(data.data?.proposals || [])
+        }
+      } catch (error) {
+        console.error('Fetch proposals error:', error)
+      } finally {
+        setLoading(prev => ({ ...prev, proposals: false }))
+      }
+    }
+
+    if (activeTab === 'proposals') {
+      fetchProposals()
+    }
+  }, [activeTab])
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'CRITICAL':
+      case 'HIGH':
+        return 'bg-red-500/10 text-red-500 border-red-500/20'
+      case 'MEDIUM':
+        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+      case 'LOW':
+        return 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+      default:
+        return 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+    }
   }
 
-  const pendingProjects = [
-    {
-      id: 1,
-      title: "Tech Innovation Hub",
-      category: "Startup",
-      university: "MIT",
-      projectLead: "Sarah Johnson",
-      submittedDate: "2024-12-15",
-      status: "Pending Review",
-      riskLevel: "Low",
-      description: "Student-led innovation hub supporting tech startups",
-    },
-    {
-      id: 2,
-      title: "Campus Media Network",
-      category: "News & Media",
-      university: "Harvard",
-      projectLead: "Michael Chen",
-      submittedDate: "2024-12-14",
-      status: "Pending Review",
-      riskLevel: "Low",
-      description: "Cross-campus media network for 5 universities",
-    },
-    {
-      id: 3,
-      title: "Financial Services Platform",
-      category: "Consulting",
-      university: "Stanford",
-      projectLead: "Emily Davis",
-      submittedDate: "2024-12-13",
-      status: "Awaiting Info",
-      riskLevel: "Medium",
-      description: "Student-run financial consulting for small businesses",
-    },
-    {
-      id: 4,
-      title: "Sustainability Initiative",
-      category: "Other",
-      university: "Berkeley",
-      projectLead: "James Wilson",
-      submittedDate: "2024-12-12",
-      status: "Pending Review",
-      riskLevel: "Low",
-      description: "Campus sustainability and environmental awareness program",
-    },
-  ]
-
-  const auditLogs = [
-    {
-      id: 1,
-      action: "Admin login",
-      user: "admin@appliedexecution.com",
-      timestamp: "2024-01-13T14:32:15Z",
-      ip: "192.168.1.100",
-      status: "Success",
-    },
-    {
-      id: 2,
-      action: "Approved project p1",
-      user: "admin@appliedexecution.com",
-      timestamp: "2024-01-13T15:35:22Z",
-      ip: "192.168.1.100",
-      status: "Success",
-    },
-    {
-      id: 3,
-      action: "Rejected project p4",
-      user: "admin@appliedexecution.com",
-      timestamp: "2024-01-13T15:40:10Z",
-      ip: "192.168.1.100",
-      status: "Success",
-    },
-    {
-      id: 4,
-      action: "Suspended user u5",
-      user: "admin@appliedexecution.com",
-      timestamp: "2024-01-13T15:45:33Z",
-      ip: "192.168.1.100",
-      status: "Success",
-    },
-    {
-      id: 5,
-      action: "Flagged content r12",
-      user: "admin@appliedexecution.com",
-      timestamp: "2024-01-13T15:50:00Z",
-      ip: "192.168.1.100",
-      status: "Success",
-    },
-  ]
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return <Badge variant="secondary">Pending Review</Badge>
+      case 'APPROVED':
+        return <Badge variant="default">Approved</Badge>
+      case 'REJECTED':
+        return <Badge variant="destructive">Rejected</Badge>
+      case 'IN_PROGRESS':
+        return <Badge className="bg-blue-500">In Progress</Badge>
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-primary text-primary-foreground">
+      {/* Header */}
+      <header className="border-b bg-background sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Shield className="h-6 w-6" />
-              <h1 className="text-2xl font-bold">Applied Execution - Governance</h1>
-            </div>
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/admin">Back to Admin Dashboard</Link>
+              <Link href="/admin" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                <Shield className="h-5 w-5" />
+                <span className="font-semibold">Admin Dashboard</span>
+              </Link>
+              <div className="h-6 w-px bg-border" />
+              <div>
+                <h1 className="text-xl font-bold">Governance & Oversight</h1>
+                <p className="text-sm text-muted-foreground">Platform administration and compliance</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/admin/settings">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Link>
               </Button>
             </div>
           </div>
@@ -167,254 +260,310 @@ export default function GovernancePage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6 lg:grid-cols-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-blue-500" />
-                Overview
-              </CardTitle>
-              <CardDescription>Platform-wide metrics and quick actions</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold">{stats.totalUsers}</div>
-                  <div className="text-sm text-muted-foreground">Total Users</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold">{stats.totalProjects}</div>
-                  <div className="text-sm text-muted-foreground">Total Projects</div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold text-green-500">{stats.activeProjects}</div>
-                  <div className="text-sm text-muted-foreground">Active Projects</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold text-blue-500">{stats.pendingProjects}</div>
-                  <div className="text-sm text-muted-foreground">Pending Projects</div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold">{stats.totalUsers}</div>
-                  <div className="text-sm text-muted-foreground">Total Projects</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold text-orange-500">{stats.flaggedContent}</div>
-                  <div className="text-sm text-muted-foreground">Flagged Content</div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold">{stats.pendingApprovals}</div>
-                  <div className="text-sm text-muted-foreground">Pending Approvals</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold">{stats.disputeRequests}</div>
-                  <div className="text-sm text-muted-foreground">Dispute Requests</div>
-                </div>
-              </div>
-              <div className="flex gap-2 pt-4 border-t">
-                <Button className="flex-1" variant="outline" asChild>
-                  <Link href="/admin/users">
-                    <Users className="h-4 w-4 mr-2" />
-                    Manage Users
-                  </Link>
-                </Button>
-                <Button className="flex-1" variant="outline" asChild>
-                  <Link href="/admin/projects">
-                    <Briefcase className="h-4 w-4 mr-2" />
-                    Manage Projects
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-500" />
-                Pending Projects
-              </CardTitle>
-              <CardDescription>Approve or reject all project submissions</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-sm text-muted-foreground mb-4">
-                Review projects awaiting approval and manage platform-wide project visibility
-              </div>
-              {pendingProjects.slice(0, 5).map((project) => (
-                <div key={project.id} className="p-4 border rounded-lg">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
-                        {project.title.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-semibold">{project.title}</div>
-                        <div className="text-sm text-muted-foreground">
-                          <Badge variant="outline">{project.category}</Badge>
-                          {" • "}
-                          {project.university}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {project.lead} • Submitted {project.submittedDate}
-                        </div>
-                      </div>
-                    </div>
-                    <Badge
-                      variant={project.status === "Completed" ? "default" : project.status === "Pending Review" ? "secondary" : "outline"}
-                    >
-                      {project.status}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium mb-2">Risk Level</div>
-                    <Badge variant={project.riskLevel === "High" ? "destructive" : project.riskLevel === "Medium" ? "default" : "secondary"}>
-                      {project.riskLevel}
-                    </Badge>
-                    <div className="text-sm text-muted-foreground mt-1">{project.description}</div>
-                  </div>
-                  <div className="flex items-center gap-3 mt-2 pt-3 border-t">
-                    <Button variant="default" size="sm">
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Approve
-                    </Button>
-                    <Button variant="destructive" size="sm">
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                      Reject
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              <div className="pt-4 border-t flex justify-center">
-                <Button variant="outline" asChild>
-                  <Link href="/admin/projects">
-                    View All Projects
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-green-500" />
-                System Health
-              </CardTitle>
-              <CardDescription>Real-time platform metrics</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <div className="text-3xl font-bold text-green-500">Healthy</div>
-                  <div className="text-sm text-muted-foreground">Server Status</div>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <div className="text-3xl font-bold text-green-500">99.8%</div>
-                  <div className="text-sm text-muted-foreground">Database</div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <div className="text-3xl font-bold text-green-500">142ms</div>
-                  <div className="text-sm text-muted-foreground">API Response</div>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <div className="text-3xl font-bold text-green-500">Active</div>
-                  <div className="text-sm text-muted-foreground">Redis Cache</div>
-                </div>
-              </div>
-              <div className="pt-4 border-t text-center">
-                <p className="text-sm text-muted-foreground">
-                  Last check: 2 hours ago
+        {/* Stats Overview */}
+        {stats && (
+          <div className="grid gap-6 mb-8 md:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
+                <Briefcase className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalProjects}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.activeProjects} active
                 </p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-orange-500" />
-                Audit Logs
-              </CardTitle>
-              <CardDescription>Track all administrative actions</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-sm text-muted-foreground mb-4">
-                View all system actions, user modifications, and content changes
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalUsers}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Across all roles
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.pendingProjects + stats.pendingApprovals}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Requires attention
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">System Health</CardTitle>
+                <Activity className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">{stats.systemHealth}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Compliance: {stats.complianceScore}%
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full max-w-5xl grid-cols-5">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="projects">Projects</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="proposals">Proposals</TabsTrigger>
+            <TabsTrigger value="audits">Audit Log</TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            {stats && (
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Today's Activity</CardTitle>
+                    <CardDescription>Platform activity in the last 24 hours</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">New Projects</span>
+                      <span className="font-semibold">{stats.todaySubmissions}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Projects Activated</span>
+                      <span className="font-semibold">{stats.todayActive}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Projects Completed</span>
+                      <span className="font-semibold">{stats.todayCompleted}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Alerts & Issues</CardTitle>
+                    <CardDescription>Items requiring attention</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Pending Approvals</span>
+                      <Badge variant="secondary">{stats.pendingApprovals}</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Pending Projects</span>
+                      <Badge variant="secondary">{stats.pendingProjects}</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Flagged Content</span>
+                      <Badge variant="destructive">{stats.flaggedContent}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              {auditLogs.slice(0, 5).map((log) => (
-                <div key={log.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                  <div>
-                    <div className="font-semibold">{log.action}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {log.user} • {log.timestamp}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {log.ip} • {log.status}
-                    </div>
+            )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Pending Projects</CardTitle>
+                <CardDescription>Projects awaiting review</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading.projects ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
                   </div>
-                  <Badge
-                    variant={log.status === "Success" ? "default" : "secondary"}
-                  >
-                    {log.status}
-                  </Badge>
-                </div>
-              ))}
-              <div className="pt-4 border-t flex justify-center">
-                <Button variant="outline" asChild>
-                  <Link href="/admin/audit">
-                    View All Logs
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                ) : pendingProjects.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No pending projects
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingProjects.slice(0, 5).map((project) => (
+                      <div key={project.id} className="flex items-center gap-4 p-4 rounded-lg border">
+                        <div className="flex-1">
+                          <div className="font-medium">{project.title}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {project.university?.name || 'No university'} • {project.projectLead?.name || 'No lead assigned'}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(project.status)}
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/projects/${project.id}`}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              Review
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-blue-500" />
-                Quick Actions
-              </CardTitle>
-              <CardDescription>Common administrative tasks</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 lg:grid-cols-2">
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/admin/content">
-                    <Flag className="h-4 w-4 mr-2" />
-                    Content Moderation
+          {/* Projects Tab */}
+          <TabsContent value="projects">
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Management</CardTitle>
+                <CardDescription>Manage all projects on the platform</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search projects..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="max-w-sm"
+                    />
+                  </div>
+                  <Button asChild>
+                    <Link href="/admin/projects">
+                      View All Projects
+                      <TrendingUp className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Users Tab */}
+          <TabsContent value="users">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>Manage all users on the platform</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild>
+                  <Link href="/admin/users">
+                    View All Users
+                    <Users className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/admin/compliance">
-                    <Scale className="h-4 w-4 mr-2" />
-                    Compliance Tools
-                  </Link>
-                </Button>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/admin/governance">
-                    <FileText className="h-4 w-4 mr-2" />
-                    View Governance
-                  </Link>
-                </Button>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/leaderboards">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    View Leaderboards
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Proposals Tab */}
+          <TabsContent value="proposals">
+            <Card>
+              <CardHeader>
+                <CardTitle>Governance Proposals</CardTitle>
+                <CardDescription>Review and manage governance proposals</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading.proposals ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : proposals.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No governance proposals
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Priority</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created By</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {proposals.map((proposal) => (
+                        <TableRow key={proposal.id}>
+                          <TableCell className="font-medium">{proposal.title}</TableCell>
+                          <TableCell>{proposal.type.replace(/_/g, ' ')}</TableCell>
+                          <TableCell>
+                            <Badge className={getPriorityColor(proposal.priority)}>
+                              {proposal.priority}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{getStatusBadge(proposal.status)}</TableCell>
+                          <TableCell>{proposal.createdBy?.name || 'Unknown'}</TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Audit Log Tab */}
+          <TabsContent value="audits">
+            <Card>
+              <CardHeader>
+                <CardTitle>Audit Log</CardTitle>
+                <CardDescription>Track all platform activities</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading.audits ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : auditLogs.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No audit logs available
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Timestamp</TableHead>
+                        <TableHead>Action</TableHead>
+                        <TableHead>Entity</TableHead>
+                        <TableHead>Performed By</TableHead>
+                        <TableHead>Details</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {auditLogs.slice(0, 50).map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {new Date(log.createdAt).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="font-medium">{log.action}</TableCell>
+                          <TableCell>{log.entity}</TableCell>
+                          <TableCell>{log.performedBy?.name || 'System'}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                            {log.details}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   )

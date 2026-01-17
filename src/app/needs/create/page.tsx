@@ -127,8 +127,12 @@ export default function PostNeedPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
-          budget: Number(formData.budget),
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          urgency: formData.urgency,
+          skills: formData.requiredSkills,
+          budget: formData.budget ? Number(formData.budget) : null,
           projectId: formData.projectId || null,
         }),
       })

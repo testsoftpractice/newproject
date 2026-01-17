@@ -70,7 +70,7 @@ export default function CreateProjectPage() {
           hrLeadId: hrData.hrLeadId,
           universityId: projectData.universityId,
           seekingInvestment: projectData.seekingInvestment,
-          investmentGoal: projectData.investmentGoal ? parseInt(projectData.investmentGoal) : null,
+          investmentGoal: projectData.investmentGoal ? parseFloat(projectData.investmentGoal) : null,
           startDate: projectData.startDate || new Date().toISOString().split("T")[0],
         }),
       })

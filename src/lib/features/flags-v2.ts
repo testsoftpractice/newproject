@@ -1,6 +1,6 @@
 /**
  * Feature Flags System - All Phases Enabled
- * Comprehensive feature management for Applied Execution Platform
+ * Comprehensive feature management for CareerToDo Platform
  */
 
 export type FeatureFlag =

@@ -1,19 +1,12 @@
+'use client'
+
+import PublicHeader from '@/components/public-header'
+import PublicFooter from '@/components/public-footer'
+
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-background">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <a href="/" className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-primary rounded-full"></div>
-              <span className="font-bold text-xl">Applied Execution Platform</span>
-            </a>
-            <a href="/" className="text-sm text-muted-foreground hover:underline">
-              Back to Home
-            </a>
-          </div>
-        </div>
-      </header>
+      <PublicHeader title="Terms" />
 
       <main className="py-20">
         <div className="container mx-auto px-4 max-w-4xl">
@@ -28,14 +21,14 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold mb-4">1. Acceptance of Terms</h2>
               <p className="text-muted-foreground">
-                By accessing or using the Applied Execution Platform, you accept and agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree to these Terms of Service, please do not access or use the Platform.
+                By accessing or using the CareerToDo Platform, you accept and agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree to these Terms of Service, please do not access or use the Platform.
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-bold mb-4">2. Platform Overview</h2>
               <p className="text-muted-foreground">
-                The Applied Execution Platform is a governed ecosystem that transforms education outcomes by validating real work done in real organizations. Through immutable records, multi-dimensional reputation, and transparent verification, we create a marketplace of proven talent and trusted ventures.
+                The CareerToDo Platform is a governed ecosystem that transforms education outcomes by validating real work done in real organizations. Through immutable records, multi-dimensional reputation, and transparent verification, we create a marketplace of proven talent and trusted ventures.
               </p>
             </section>
 
@@ -78,7 +71,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold mb-4">5. Intellectual Property</h2>
               <p className="text-muted-foreground">
-                All content and materials on the Platform, including but not limited to text, graphics, logos, images, software, and code, are owned by the Applied Execution Platform or its licensors and are protected by intellectual property laws.
+                All content and materials on the Platform, including but not limited to text, graphics, logos, images, software, and code, are owned by the CareerToDo Platform or its licensors and are protected by intellectual property laws.
               </p>
               <p className="text-muted-foreground">
                 You may not copy, modify, reproduce, distribute, display, perform, publish, license, create derivative works from, transmit, or otherwise use any content from the Platform without our prior written consent.
@@ -87,7 +80,7 @@ export default function TermsPage() {
                 You may not use the Platform to solicit or collect any content from other users without their explicit consent.
               </p>
               <p className="text-muted-foreground">
-                All rights not expressly granted to you in these Terms of Service are reserved by the Applied Execution Platform and its licensors.
+                All rights not expressly granted to you in these Terms of Service are reserved by the CareerToDo Platform and its licensors.
               </p>
             </section>
 
@@ -129,7 +122,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold mb-4">8. Indemnification</h2>
               <p className="text-muted-foreground">
-                You agree to indemnify, defend, and hold harmless the Applied Execution Platform and its officers, directors, employees, agents, contractors, licensors, suppliers, and affiliates from and against any and all claims, demands, losses, liabilities, costs, and expenses arising out of or related to your use of the Platform or your violation of these Terms of Service.
+                You agree to indemnify, defend, and hold harmless the CareerToDo Platform and its officers, directors, employees, agents, contractors, licensors, suppliers, and affiliates from and against any and all claims, demands, losses, liabilities, costs, and expenses arising out of or related to your use of the Platform or your violation of these Terms of Service.
               </p>
               <p className="text-muted-foreground">
                 This indemnification obligation shall survive termination of these Terms of Service and your use of the Platform.
@@ -152,7 +145,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold mb-4">10. Governing Law and Dispute Resolution</h2>
               <p className="text-muted-foreground">
-                These Terms of Service shall be governed by and construed in accordance with the laws of the jurisdiction in which the Applied Execution Platform is established.
+                These Terms of Service shall be governed by and construed in accordance with the laws of the jurisdiction in which the CareerToDo Platform is established.
               </p>
               <p className="text-muted-foreground">
                 Any disputes arising out of or related to these Terms of Service or your use of the Platform shall be resolved through binding arbitration in accordance with the rules of the American Arbitration Association.
@@ -179,7 +172,7 @@ export default function TermsPage() {
               <h2 className="text-2xl font-bold mb-4">12. Contact Information</h2>
               <div className="prose max-w-none text-muted-foreground space-y-4">
                 <p>If you have any questions about these Terms of Service, please contact us at:</p>
-                <p>Email: <a href="mailto:support@appliedexecution.com" className="text-primary hover:underline">support@appliedexecution.com</a></p>
+                <p>Email: <a href="mailto:support@CareerToDo.com" className="text-primary hover:underline">support@CareerToDo.com</a></p>
                 <p>We will make reasonable efforts to respond to your inquiries in a timely manner.</p>
               </div>
             </section>
@@ -187,7 +180,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold mb-4">13. General Provisions</h2>
               <p className="text-muted-foreground">
-                These Terms of Service constitute the entire agreement between you and the Applied Execution Platform regarding your use of the Platform and supersede any prior agreements between you and the Applied Execution Platform regarding the subject matter hereof.
+                These Terms of Service constitute the entire agreement between you and the CareerToDo Platform regarding your use of the Platform and supersede any prior agreements between you and the CareerToDo Platform regarding the subject matter hereof.
               </p>
               <p className="text-muted-foreground">
                 If any provision of these Terms of Service is found to be invalid or unenforceable by a court of competent jurisdiction, such provision shall be deemed severable from the remaining Terms of Service, and the remaining Terms of Service shall continue in full force and effect.
@@ -213,14 +206,7 @@ export default function TermsPage() {
           </div>
         </div>
       </main>
-
-      <footer className="border-t bg-muted py-8">
-        <div className="container mx-auto px-4">
-          <div className="text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Applied Execution Platform. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }

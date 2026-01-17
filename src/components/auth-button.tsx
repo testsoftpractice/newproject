@@ -20,7 +20,7 @@ export function AuthButton({ children, className, variant = 'default', ...props 
     router.push('/dashboard/student')
   } else if (user.role === 'UNIVERSITY') {
     router.push('/dashboard/university')
-  } else if (user.role === 'EMPLOYER' {
+  } else if (user.role === 'EMPLOYER') {
     router.push('/marketplace')
   } else if (user.role === 'INVESTOR') {
     router.push('/marketplace')

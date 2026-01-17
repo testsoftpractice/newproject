@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -24,19 +26,32 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import Link from 'next/link'
+import PublicHeader from '@/components/public-header'
+import PublicFooter from '@/components/public-footer'
 import { toast } from '@/hooks/use-toast'
 
 export default function SuppliersPage() {
+  const { user } = useAuth()
+  const router = useRouter()
   const [suppliers, setSuppliers] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
+
+  // Check authentication
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth')
+    }
+  }, [user, router])
 
   const categories = ['all', 'Technology', 'Design', 'Marketing', 'Data & Analytics', 'Content']
 
   // Fetch suppliers
   useEffect(() => {
     const fetchSuppliers = async () => {
+      if (!user) return
+
       try {
         setLoading(true)
         const response = await fetch(`/api/suppliers?category=${categoryFilter}&search=${searchQuery}`)
@@ -58,7 +73,7 @@ export default function SuppliersPage() {
     }
 
     fetchSuppliers()
-  }, [categoryFilter])
+  }, [categoryFilter, user])
 
   // Filter suppliers locally
   const filteredSuppliers = suppliers.filter((supplier) => {
@@ -70,27 +85,10 @@ export default function SuppliersPage() {
   })
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-background">
-        <div className="container mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
-              <h1 className="text-xl sm:text-2xl font-bold truncate">Supplier Marketplace</h1>
-            </div>
-            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/">
-                  <span className="hidden sm:inline">Back to Home</span>
-                  <span className="sm:hidden">Home</span>
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background flex flex-col">
+      <PublicHeader />
 
-      <main className="container mx-auto px-4 py-6 sm:py-8 sm:px-6 lg:px-8">
+      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
           {/* Search and Filter */}
           <Card>
@@ -218,6 +216,7 @@ export default function SuppliersPage() {
           )}
         </div>
       </main>
+      <PublicFooter />
     </div>
   )
 }

@@ -4,21 +4,44 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, CheckCircle2, XCircle, MoreHorizontal, Search, Filter, Briefcase, TrendingUp, Users, Calendar, AlertTriangle, RefreshCw } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import {
+  ArrowLeft,
+  CheckCircle2,
+  XCircle,
+  MoreHorizontal,
+  Search,
+  Filter,
+  Briefcase,
+  Users,
+  Calendar,
+  AlertTriangle,
+  RefreshCw,
+  Loader2,
+  Eye,
+} from 'lucide-react'
 import Link from 'next/link'
 import { toast } from '@/hooks/use-toast'
 
 interface Project {
   id: string
   title: string
+  description: string
   category: string
   university: string
   projectLead: string
   status: string
   riskLevel: string
-  description: string
-  submittedDate: string
-  teamSize: number
+  investmentStatus: string
+  submittedAt: string
+  lastUpdated: string | null
 }
 
 export default function AdminProjectsPage() {
@@ -28,301 +51,276 @@ export default function AdminProjectsPage() {
 
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(false)
+  const [totalCount, setTotalCount] = useState(0)
+  const [page, setPage] = useState(1)
+  const pageSize = 20
 
-  // Mock projects data
-  const mockProjects: Project[] = [
-    {
-      id: '1',
-      title: 'Tech Innovation Hub',
-      category: 'Startup',
-      university: 'MIT',
-      projectLead: 'Sarah Johnson',
-      status: 'Pending Review',
-      riskLevel: 'Low',
-      description: 'Student-led innovation hub supporting tech startups',
-      submittedDate: '2024-12-15',
-      teamSize: 12,
-    },
-    {
-      id: '2',
-      title: 'Campus Media Network',
-      category: 'News & Media',
-      university: 'Harvard',
-      projectLead: 'Michael Chen',
-      status: 'Approved',
-      riskLevel: 'Low',
-      description: 'Cross-campus media network for 5 universities',
-      submittedDate: '2024-12-14',
-      teamSize: 8,
-    },
-    {
-      id: '3',
-      title: 'Financial Services Platform',
-      category: 'Consulting',
-      university: 'Stanford',
-      projectLead: 'Emily Davis',
-      status: 'Awaiting Info',
-      riskLevel: 'Medium',
-      description: 'Student-run financial consulting for small businesses',
-      submittedDate: '2024-12-13',
-      teamSize: 5,
-    },
-    {
-      id: '4',
-      title: 'Sustainability Initiative',
-      category: 'Other',
-      university: 'Berkeley',
-      projectLead: 'James Wilson',
-      status: 'Approved',
-      riskLevel: 'Low',
-      description: 'Campus sustainability and environmental awareness program',
-      submittedDate: '2024-12-12',
-      teamSize: 15,
-    },
-    {
-      id: '5',
-      title: 'Data Analytics Platform',
-      category: 'Research',
-      university: 'Yale',
-      projectLead: 'David Lee',
-      status: 'Pending Review',
-      riskLevel: 'Medium',
-      description: 'University-wide data analytics and visualization platform',
-      submittedDate: '2024-12-16',
-      teamSize: 10,
-    },
-  ]
-
+  // Fetch projects from API
   useEffect(() => {
     const fetchProjects = async () => {
-      setLoading(true)
-      await new Promise(resolve => setTimeout(resolve, 500))
-      setProjects(mockProjects)
-      setLoading(false)
+      try {
+        setLoading(true)
+        const params = new URLSearchParams()
+        if (statusFilter !== 'all') params.append('status', statusFilter)
+        params.append('limit', pageSize.toString())
+
+        const response = await fetch(`/api/admin/projects?${params.toString()}`)
+        const data = await response.json()
+
+        if (data.success) {
+          setProjects(data.data?.projects || [])
+          setTotalCount(data.data?.totalCount || 0)
+        } else {
+          toast({
+            title: 'Error',
+            description: data.error || 'Failed to fetch projects',
+            variant: 'destructive'
+          })
+        }
+      } catch (error) {
+        console.error('Fetch projects error:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch projects',
+          variant: 'destructive'
+        })
+      } finally {
+        setLoading(false)
+      }
     }
+
     fetchProjects()
-  }, [])
+  }, [statusFilter])
 
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = !searchQuery ||
-      project.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || project.status === statusFilter
-    const matchesTab = activeTab === 'all' ||
-      (activeTab === 'pending' && (project.status === 'Pending Review' || project.status === 'Awaiting Info')) ||
-      (activeTab === 'approved' && project.status === 'Approved')
-    return matchesSearch && matchesStatus && matchesTab
-  })
-
-  const handleApprove = async (project: Project) => {
-    toast({
-      title: 'Project Approved',
-      description: `Project "${project.title}" has been approved.`,
-    })
+  const handleSearch = (value: string) => {
+    setSearchQuery(value)
   }
 
-  const handleReject = async (project: Project) => {
-    toast({
-      title: 'Project Rejected',
-      description: `Project "${project.title}" has been rejected.`,
-      variant: 'destructive',
-    })
+  const filteredProjects = projects.filter(project =>
+    searchQuery === '' ||
+    project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    project.university.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'ACTIVE':
+        return <Badge className="bg-green-500">Active</Badge>
+      case 'PENDING':
+        return <Badge variant="secondary">Pending Review</Badge>
+      case 'APPROVED':
+        return <Badge className="bg-blue-500">Approved</Badge>
+      case 'RECRUITING':
+        return <Badge className="bg-purple-500">Recruiting</Badge>
+      case 'COMPLETED':
+        return <Badge variant="default">Completed</Badge>
+      case 'PAUSED':
+        return <Badge variant="outline">Paused</Badge>
+      case 'TERMINATED':
+        return <Badge variant="destructive">Terminated</Badge>
+      case 'PROPOSED':
+        return <Badge variant="secondary">Proposed</Badge>
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
+  }
+
+  const getRiskBadge = (riskLevel: string) => {
+    switch (riskLevel) {
+      case 'Low':
+        return <Badge className="bg-green-500/10 text-green-500">Low Risk</Badge>
+      case 'Medium':
+        return <Badge className="bg-yellow-500/10 text-yellow-500">Medium Risk</Badge>
+      case 'High':
+        return <Badge className="bg-red-500/10 text-red-500">High Risk</Badge>
+      default:
+        return <Badge variant="outline">Unknown</Badge>
+    }
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-primary text-primary-foreground sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
-            <div className="flex items-center gap-2">
-              <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
-              <h1 className="text-xl sm:text-2xl font-bold truncate">Manage Projects</h1>
+      {/* Header */}
+      <header className="border-b bg-background sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/admin/governance" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="h-5 w-5" />
+                <span className="font-semibold">Back to Governance</span>
+              </Link>
+              <div className="h-6 w-px bg-border" />
+              <div>
+                <h1 className="text-xl font-bold">Project Management</h1>
+                <p className="text-sm text-muted-foreground">Manage all projects on the platform</p>
+              </div>
             </div>
-            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-              <Button variant="ghost" size="sm" asChild className="text-primary-foreground hover:bg-primary/80">
-                <Link href="/admin/governance">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline ml-2">Back to Admin</span>
-                  <span className="sm:hidden">Back</span>
-                </Link>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <main className="container mx-auto px-4 py-8">
+        {/* Stats Cards */}
+        <div className="grid gap-6 mb-8 md:grid-cols-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Search & Filter</CardTitle>
-              <CardDescription>Find projects to manage</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex-1 relative min-w-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Search projects by title, university, or lead..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 sm:py-3 border rounded-md text-sm sm:text-base"
-                />
-              </div>
-              <div className="flex gap-2 sm:gap-3 flex-wrap">
-                <Button
-                  variant={statusFilter === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStatusFilter('all')}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={statusFilter === 'Pending Review' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStatusFilter('Pending Review')}
-                >
-                  Pending
-                </Button>
-                <Button
-                  variant={statusFilter === 'Approved' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStatusFilter('Approved')}
-                >
-                  Approved
-                </Button>
-              </div>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">All projects</p>
             </CardContent>
           </Card>
 
-          <div className="flex gap-2 mb-4 sm:mb-6 flex-wrap">
-            <Button
-              variant={activeTab === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setActiveTab('all')}
-            >
-              All Projects
-            </Button>
-            <Button
-              variant={activeTab === 'pending' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setActiveTab('pending')}
-            >
-              Pending Review
-            </Button>
-            <Button
-              variant={activeTab === 'approved' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setActiveTab('approved')}
-            >
-              Approved
-            </Button>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
+              <Briefcase className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {projects.filter(p => p.status === 'ACTIVE').length}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Currently running</p>
+            </CardContent>
+          </Card>
 
-          {loading ? (
-            <div className="animate-pulse text-center py-8 sm:py-12">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 border-4 border-t-blue-500 border-r-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-sm text-muted-foreground mt-2">Loading projects...</p>
-            </div>
-          ) : filteredProjects.length > 0 ? (
-            <Card>
-              <CardContent className="p-8 sm:p-12 text-center">
-                <Briefcase className="h-16 w-16 sm:h-20 sm:w-20 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg sm:text-xl font-semibold mb-2">No Projects Found</h3>
-                <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
-                  No projects match your search and filter criteria.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2">
-              {filteredProjects.map((project) => (
-                <Card key={project.id}>
-                  <CardHeader>
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <CardTitle className="text-base sm:text-lg truncate">{project.title}</CardTitle>
-                        <CardDescription className="text-xs sm:text-sm line-clamp-2 truncate">
-                          {project.description}
-                        </CardDescription>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <Badge variant="outline" className="text-xs">{project.category}</Badge>
-                          <Badge variant="outline" className="text-xs">{project.university}</Badge>
-                          <Badge variant="outline" className="text-xs">{project.projectLead}</Badge>
-                        </div>
-                      </div>
-                      <Badge
-                        variant={project.status === 'Approved' ? 'default' : project.status === 'Pending Review' ? 'secondary' : 'destructive'}
-                        className="text-xs w-fit"
-                      >
-                        {project.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3 sm:space-y-4">
-                    <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
-                      <div className="space-y-1 sm:space-y-2 text-center">
-                        <div className="text-xs sm:text-sm text-muted-foreground mb-1">Team Size</div>
-                        <div className="text-2xl sm:text-3xl font-bold break-words">{project.teamSize}</div>
-                      </div>
-                      <div className="space-y-1 sm:space-y-2 text-center">
-                        <div className="text-xs sm:text-sm text-muted-foreground mb-1">Risk Level</div>
-                        <Badge
-                          variant={project.riskLevel === 'High' ? 'destructive' : project.riskLevel === 'Medium' ? 'default' : 'secondary'}
-                          className="text-sm sm:text-base w-fit"
-                        >
-                          {project.riskLevel}
-                        </Badge>
-                      </div>
-                      <div className="space-y-1 sm:space-y-2 text-center">
-                        <div className="text-xs sm:text-sm text-muted-foreground mb-1">Submitted</div>
-                        <div className="text-xs sm:text-sm font-medium break-words">{new Date(project.submittedDate).toLocaleDateString()}</div>
-                      </div>
-                    </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600">
+                {projects.filter(p => p.status === 'PENDING' || p.status === 'PROPOSED').length}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
+            </CardContent>
+          </Card>
 
-                    <div className="pt-3 sm:pt-4 border-t flex items-center justify-between">
-                      <div className="text-xs sm:text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 flex-shrink-0" />
-                          <span>Created on {new Date(project.submittedDate).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <div className="px-4 sm:px-6 py-3 sm:py-4 border-t flex items-center justify-between gap-2 sm:gap-4">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => handleApprove(project)}
-                      className="flex-1 text-xs sm:text-sm"
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">Approve Project</span>
-                      <span className="sm:hidden">Approve</span>
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleReject(project)}
-                      className="flex-1 text-xs sm:text-sm"
-                    >
-                      <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">Reject Project</span>
-                      <span className="sm:hidden">Reject</span>
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          <div className="text-center pt-6 sm:pt-8">
-            <Button variant="outline" className="text-sm sm:text-base" asChild>
-              <Link href="/admin/governance">
-                Back to Admin Dashboard
-              </Link>
-            </Button>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completed Projects</CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">
+                {projects.filter(p => p.status === 'COMPLETED').length}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Successfully finished</p>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Filters and Search */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 flex items-center gap-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search projects by title or description..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="PENDING">Pending Review</SelectItem>
+                  <SelectItem value="PROPOSED">Proposed</SelectItem>
+                  <SelectItem value="APPROVED">Approved</SelectItem>
+                  <SelectItem value="RECRUITING">Recruiting</SelectItem>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="PAUSED">Paused</SelectItem>
+                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                  <SelectItem value="TERMINATED">Terminated</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Projects List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Projects List</CardTitle>
+            <CardDescription>
+              Showing {filteredProjects.length} of {totalCount} total projects
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : filteredProjects.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No projects found matching the criteria
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredProjects.map((project) => (
+                  <div key={project.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold truncate">{project.title}</h3>
+                        {getStatusBadge(project.status)}
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                        {project.description}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3 text-sm">
+                        <span className="text-muted-foreground">
+                          <Briefcase className="h-3 w-3 inline mr-1" />
+                          {project.category}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {project.university}
+                        </span>
+                        {project.investmentStatus === 'Seeking' && (
+                          <Badge variant="outline" className="text-xs">
+                            Seeking Investment
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 self-start md:self-center">
+                      {getRiskBadge(project.riskLevel)}
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/projects/${project.id}`}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {!loading && filteredProjects.length > 0 && (
+              <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Page 1 of 1
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   )

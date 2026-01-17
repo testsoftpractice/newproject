@@ -53,8 +53,8 @@ export async function POST(request: NextRequest) {
     
     const msg = {
       to: email,
-      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@appliedexecution.com',
-      subject: 'Reset Your Password - Applied Execution Platform',
+      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@careertodo.com',
+      subject: 'Reset Your Password - CareerToDo Platform',
       html: '<!DOCTYPE html><html><body><div style="font-family: Arial, sans-serif; padding: 20px;"><h1>Reset Your Password</h1><p>Click the link below to reset your password:</p><a href="' + resetUrl + '">Reset Password</a></div></body></html>',
     }
     

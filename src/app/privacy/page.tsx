@@ -1,19 +1,12 @@
+'use client'
+
+import PublicHeader from '@/components/public-header'
+import PublicFooter from '@/components/public-footer'
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-background">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <a href="/" className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-primary rounded-full"></div>
-              <span className="font-bold text-xl">Applied Execution Platform</span>
-            </a>
-            <a href="/" className="text-sm text-muted-foreground hover:underline">
-              Back to Home
-            </a>
-          </div>
-        </div>
-      </header>
+      <PublicHeader title="Privacy Policy" />
 
       <main className="py-20">
         <div className="container mx-auto px-4 max-w-4xl">
@@ -28,7 +21,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-2xl font-bold mb-4">1. Information We Collect</h2>
               <div className="prose max-w-none text-muted-foreground space-y-4">
-                <p>The Applied Execution Platform collects various types of information to provide and improve our services. Below is a detailed breakdown of what information we collect, how we use it, and your rights regarding your information.</p>
+                <p>The CareerToDo Platform collects various types of information to provide and improve our services. Below is a detailed breakdown of what information we collect, how we use it, and your rights regarding your information.</p>
                 
                 <div className="space-y-4">
                   <div>
@@ -333,7 +326,7 @@ export default function PrivacyPage() {
                   <div>
                     <h3 className="text-xl font-bold mb-2">Contact Us</h3>
                     <p className="text-sm text-muted-foreground mb-2">
-                      If you have any questions or concerns about this Privacy Policy, please contact us at: support@appliedexecution.com. We will make reasonable efforts to address your inquiries in a timely manner.
+                      If you have any questions or concerns about this Privacy Policy, please contact us at: support@CareerToDo.com. We will make reasonable efforts to address your inquiries in a timely manner.
                     </p>
                   </div>
                 </div>
@@ -491,7 +484,7 @@ export default function PrivacyPage() {
                       For general inquiries about the Platform, privacy practices, or this Privacy Policy, please contact us at:
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Email: <a href="mailto:support@appliedexecution.com" className="text-primary hover:underline">support@appliedexecution.com</a>
+                      Email: <a href="mailto:support@CareerToDo.com" className="text-primary hover:underline">support@CareerToDo.com</a>
                     </p>
                     <p className="text-sm text-muted-foreground">
                       We will make reasonable efforts to respond to your inquiries within 5-7 business days.
@@ -504,7 +497,7 @@ export default function PrivacyPage() {
                       To exercise your rights regarding your personal information, please contact our Data Protection Officer (DPO) at:
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Email: <a href="mailto:dpo@appliedexecution.com" className="text-primary hover:underline">dpo@appliedexecution.com</a>
+                      Email: <a href="mailto:dpo@CareerToDo.com" className="text-primary hover:underline">dpo@CareerToDo.com</a>
                     </p>
                   </div>
                   
@@ -521,7 +514,7 @@ export default function PrivacyPage() {
                       For legal inquiries regarding this Privacy Policy or our handling of personal information, please contact our legal department at:
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Email: <a href="mailto:legal@appliedexecution.com" className="text-primary hover:underline">legal@appliedexecution.com</a>
+                      Email: <a href="mailto:legal@CareerToDo.com" className="text-primary hover:underline">legal@CareerToDo.com</a>
                     </p>
                   </div>
                   
@@ -531,7 +524,7 @@ export default function PrivacyPage() {
                       For urgent security concerns or data breaches involving your personal information, please contact our emergency hotline immediately:
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Email: <a href="mailto:emergency@appliedexecution.com" className="text-primary hover:underline">emergency@appliedexecution.com</a>
+                      Email: <a href="mailto:emergency@CareerToDo.com" className="text-primary hover:underline">emergency@CareerToDo.com</a>
                     </p>
                   </div>
                 </div>
@@ -630,14 +623,7 @@ export default function PrivacyPage() {
           </div>
         </div>
       </main>
-
-      <footer className="border-t bg-muted py-8">
-        <div className="container mx-auto px-4">
-          <div className="text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Applied Execution Platform. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }
